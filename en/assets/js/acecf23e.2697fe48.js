@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunklexilearn_technical_docs=self.webpackChunklexilearn_technical_docs||[]).push([[1903],{1912:e=>{e.exports=JSON.parse('{"blogBasePath":"/lexilearn-technical-docs/en/blog","blogTitle":"Blog","authorsListPath":"/lexilearn-technical-docs/en/blog/authors"}')}}]);
