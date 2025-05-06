@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunklexilearn_technical_docs=self.webpackChunklexilearn_technical_docs||[]).push([[2024],{2024:(e,c,a)=>{a.d(c,{createArchitectureServices:()=>l.S});var l=a(8815);a(3579)}}]);

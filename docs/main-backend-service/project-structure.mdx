@@ -1,0 +1,159 @@
+---
+title: 🗂️ Project Structure – cấu trúc các thư mục
+sidebar_position: 3
+---
+
+```
+
+MainBackendService/
+├── BackendApplication.java        // Entry point của Spring Boot app
+├── argumentResolver/              // Custom argument resolver cho request
+│   └── ...
+├── config/                        // Các cấu hình server, beans, feign, cors...
+│   └── ...
+├── controller/                    // Các REST API endpoint
+│   └── ...
+├── dto/                           // Các Data Transfer Object class
+│   └── ...
+├── exception/                     // Định nghĩa exception & xử lý lỗi
+│   └── ...
+├── filter/                        // Các HTTP filter (logging, JWT,...)
+│   └── ...
+├── GraphqlResolver/              // Resolver cho GraphQL (query, mutation)
+│   └── ...
+├── interceptors/                  // Interceptor chạy trước/sau request
+│   └── ...
+├── Microservice/                  // Feign client gọi đến các service khác
+│   └── ...
+├── modal/                         // Domain models hoặc JOOQ-generated models
+│   └── ...
+├── service/                       // Business logic của từng module
+│   └── ...
+└── utils/                         // Các hàm tiện ích dùng chung
+    └── ...
+```
+
+---
+
+## 🔹 `BackendApplication.java`
+
+```java title="src/main/java/MainBackendService/BackendApplication.java"
+package MainBackendService;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
+@EnableFeignClients
+public class BackendApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BackendApplication.class, args);
+    }
+}
+
+```
+
+Đây là điểm khởi đầu của ứng dụng. Class `BackendApplication` chịu trách nhiệm khởi động Spring Boot application, bật tính năng Feign Client và loại trừ cấu hình bảo mật mặc định (`SecurityAutoConfiguration`).
+
+---
+
+## 📁 Các thư mục con trong `MainBackendService`
+
+### 🧩 `argumentResolver/`
+
+Chứa các custom argument resolver, dùng để xử lý các tham số đầu vào trong request controller.
+
+> Ví dụ: Lấy user từ token và inject vào controller method một cách tự động.
+
+---
+
+### ⚙️ `config/`
+
+Cấu hình tổng thể của server như:
+
+- Cấu hình Feign Client
+- Cấu hình Cors
+- Cấu hình Spring Beans
+- Các class annotated với `@Configuration`
+
+---
+
+### 📡 `controller/`
+
+Nơi định nghĩa các REST API endpoints của hệ thống.
+
+> Mỗi controller đại diện cho một resource/module trong ứng dụng.
+
+---
+
+### 📦 `dto/` (Data Transfer Objects)
+
+Chứa các class dùng để định nghĩa đầu vào/đầu ra khi giao tiếp giữa client và server.
+
+> Mục tiêu là duy trì tính nhất quán, dễ bảo trì và tránh expose trực tiếp entity của hệ thống.
+
+---
+
+### 🚨 `exception/`
+
+Định nghĩa các exception custom và các class xử lý lỗi (ví dụ: `@ControllerAdvice`).
+
+> Giúp trả về thông điệp lỗi chuẩn hóa khi có exception xảy ra trong quá trình xử lý request.
+
+---
+
+### 🚪 `filter/`
+
+Chứa các HTTP request filters.
+
+> Ví dụ: kiểm tra JWT, logging, trace request,...
+
+---
+
+### 📊 `GraphqlResolver/`
+
+Các resolver xử lý các GraphQL query, mutation.
+
+> Nếu ứng dụng có GraphQL endpoint, toàn bộ logic truy vấn nằm ở đây.
+
+---
+
+### 🧭 `interceptors/`
+
+Chứa các interceptor – logic chạy trước hoặc sau khi request được xử lý.
+
+> Dùng để log, kiểm tra authentication, tracing...
+
+---
+
+### 🔌 `Microservice/`
+
+Định nghĩa các interface sử dụng Feign Client để giao tiếp với các microservice khác.
+
+> Giúp gọi API của các service khác thông qua HTTP một cách đơn giản và có type-check.
+
+---
+
+### 🧱 `modal/` (nên là `model/`)
+
+Chứa các entity hoặc các class mô tả dữ liệu domain của ứng dụng.
+
+> Lưu ý: bạn có thể cân nhắc đổi tên thành `model/` để thống nhất convention.
+
+---
+
+### 🛠️ `service/`
+
+Nơi chứa các business logic nội bộ.
+
+> Mỗi service tương ứng với một domain/module và chứa các logic xử lý chính.
+
+---
+
+### 🧰 `utils/`
+
+Các class tiện ích dùng chung trong toàn bộ project.
+
+> Ví dụ: xử lý chuỗi, thời gian, mã hóa,...
