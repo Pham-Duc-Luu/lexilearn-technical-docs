@@ -1,0 +1,27 @@
+---
+sidebar_position: 1
+---
+
+# Tổng quan
+
+Diagram minh họa tổng quan hệ thống:
+
+import SystemDesign from '@site/src/components/docs/system design/index.tsx';
+
+<SystemDesign />;
+
+# 📌 Mô tả kiến trúc
+
+Hình ảnh trên thể hiện một cách trực quan cách mà hệ thống hoạt động, với kiến trúc được chia làm hai nhóm chính: **client** và **server**.
+
+## 🖥️ Client
+
+- Gồm `frontend` phát triển bằng React (Vite), đảm nhiệm việc hiển thị giao diện người dùng.
+- Giao tiếp với server thông qua `apigateway`.
+- Nếu bạn đang tìm hiểu hoặc làm việc với client, bạn có thể tìm hiểu thêm ở [đây](/docs/front-end-service/intro).
+
+## Server
+
+`apigateway` (AWS API Gateway): là điểm truy cập duy nhất từ phía client, định tuyến các request đến các service khác.
+
+> Kiến trúc microservice rất lớn, vậy nên các bạn có thể tìm kiếm các tài liệu về các service này ở các phân tiếp theo
