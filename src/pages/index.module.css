@@ -8,6 +8,21 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+
+  background-color: var(--docusaurus-highlighted-code-line-bg);
+
+  /* Gradient text */
+  background: linear-gradient(90deg, #686aff, #ff62c6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.BriefDescribe {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--docusaurus-highlighted-code-line-bg);
 }
 
 @media screen and (max-width: 996px) {

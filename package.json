@@ -21,18 +21,26 @@
     "@iconify-json/logos": "^1.2.4",
     "@iconify/react": "^6.0.0",
     "@mdx-js/react": "^3.0.0",
+    "@redocly/redoc": "^0.121.1",
     "clsx": "^2.0.0",
+    "docusaurus-plugin-openapi-docs": "^4.4.0",
+    "docusaurus-theme-openapi-docs": "^4.4.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "redocusaurus": "^2.2.3"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.7.0",
     "@docusaurus/tsconfig": "3.7.0",
     "@docusaurus/types": "3.7.0",
+    "@graphql-markdown/docusaurus": "^1.29.0",
+    "@graphql-tools/graphql-file-loader": "^8.0.19",
     "@iconify-json/bxl": "^1.2.2",
     "@iconify-json/devicon": "^1.2.23",
     "@iconify-json/material-icon-theme": "^1.2.8",
+    "get-graphql-schema": "^2.1.2",
+    "graphql": "^16.11.0",
     "typescript": "~5.6.2"
   },
   "browserslist": {

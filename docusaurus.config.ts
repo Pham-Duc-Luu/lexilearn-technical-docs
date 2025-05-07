@@ -1,8 +1,8 @@
 import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
-
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+import type * as Redocusaurus from 'redocusaurus';
 
 const config: Config = {
   title: 'Lexilearn technical documentations',
@@ -23,7 +23,7 @@ const config: Config = {
   },
 
   trailingSlash: false, // optional but often recommended
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: ['@docusaurus/theme-mermaid', 'docusaurus-theme-openapi-docs'],
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
@@ -66,7 +66,42 @@ const config: Config = {
         },
       } satisfies Preset.Options,
     ],
+
+    // Redocusaurus config
+    [
+      'redocusaurus',
+      {
+        // Plugin Options for loading OpenAPI files
+        specs: [
+          // Pass it a path to a local OpenAPI YAML file
+          {
+            // Redocusaurus will automatically bundle your spec into a single file during the build
+            spec: 'static/swagger/openapi.json',
+            route: 'docs/api/main-spring-boot',
+          },
+        ],
+      },
+    ] satisfies Redocusaurus.PresetEntry,
   ],
+
+  plugins: [
+    [
+      '@graphql-markdown/docusaurus',
+      /** @type {import('@graphql-markdown/types').ConfigOptions} */
+      {
+        schema: './schema/schema.graphql',
+        rootPath: './docs', // docs will be generated under './docs/swapi' (rootPath/baseURL)
+        baseURL: 'main-backend-service/graphql/🔍introspection',
+        loaders: {
+          GraphQLFileLoader: '@graphql-tools/graphql-file-loader', // local file schema
+        },
+        // Optional advanced settings
+        prettify: true,
+        customDirective: true,
+      },
+    ],
+  ],
+
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
@@ -83,6 +118,7 @@ const config: Config = {
           position: 'left',
           label: 'docs',
         },
+
         // { to: '/blog', label: 'Blog', position: 'left' },
         // {
         //   href: 'https://github.com/facebook/docusaurus',
@@ -91,55 +127,11 @@ const config: Config = {
         // },
       ],
     },
-    // footer: {
-    //   style: 'dark',
-    //   links: [
-    //     {
-    //       title: 'Docs',
-    //       items: [
-    //         {
-    //           label: 'Tutorial',
-    //           to: '/docs/intro',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       title: 'Community',
-    //       items: [
-    //         {
-    //           label: 'Stack Overflow',
-    //           href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-    //         },
-    //         {
-    //           label: 'Discord',
-    //           href: 'https://discordapp.com/invite/docusaurus',
-    //         },
-    //         {
-    //           label: 'X',
-    //           href: 'https://x.com/docusaurus',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       title: 'More',
-    //       items: [
-    //         {
-    //           label: 'Blog',
-    //           to: '/blog',
-    //         },
-    //         {
-    //           label: 'GitHub',
-    //           href: 'https://github.com/facebook/docusaurus',
-    //         },
-    //       ],
-    //     },
-    //   ],
-    //   copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
-    // },
+
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
-      additionalLanguages: ['java'],
+      additionalLanguages: ['java', 'scala'],
     },
   } satisfies Preset.ThemeConfig,
 };

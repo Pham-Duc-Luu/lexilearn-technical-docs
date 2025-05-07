@@ -1,0 +1,614 @@
+Phần này sẽ giới thiểu và mô tả các Config trong dự án mà sẽ ảnh hưởng đến toàn bộ cách mà spring boot hoạt động, những config này sẽ nằm trong [folder config](https://github.com/Pham-Duc-Luu/Lexilearn-backend-service-spring-boot/tree/main/src/main/java/MainBackendService/config)
+
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Cấu hình CORS trong Spring Boot
+
+Đoạn mã dưới đây cấu hình **CORS (Cross-Origin Resource Sharing)** trong một ứng dụng Spring Boot. Mục tiêu là cho phép frontend hoặc API Gateway truy cập vào backend thông qua các HTTP request cross-origin một cách an toàn.
+
+### Mục đích
+
+Khi frontend và backend không cùng origin (tức là khác domain, port hoặc giao thức), trình duyệt sẽ chặn các yêu cầu HTTP do chính sách bảo mật CORS. Để cho phép giao tiếp giữa frontend và backend, ta cần cấu hình CORS để:
+
+- Cho phép các HTTP method cụ thể (GET, POST, PUT, DELETE, OPTIONS)
+- Chỉ cho phép request từ `apiGatewayUrl`
+- Hỗ trợ gửi cookie (với `allowCredentials = true`)
+
+### Mã nguồn
+
+```java title="CORS.java"
+@Configuration
+public class CORS {
+
+    @Value("${apiGatewayUrl}")
+    private String apiGatewayUrl;
+
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOrigins(List.of(apiGatewayUrl)); // Chỉ cho phép từ API Gateway
+        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(List.of("*"));
+        corsConfig.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+        return new CorsFilter(source);
+    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                       | Ý nghĩa                                                                                                                |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `@Value("${apiGatewayUrl}")`                   | Inject giá trị của URL API Gateway từ file `application.properties` hoặc biến môi trường.                              |
+| `setAllowedOrigins(List.of(apiGatewayUrl))`    | Chỉ cho phép các request đến từ domain cụ thể này. Đây là cách bảo vệ backend khỏi các request trái phép từ domain lạ. |
+| `setAllowedMethods(...)`                       | Chỉ định các HTTP method được phép. Bạn có thể mở rộng hoặc thu hẹp danh sách này tùy theo nhu cầu.                    |
+| `setAllowedHeaders(List.of("*"))`              | Cho phép tất cả các header được gửi đến. Bạn có thể giới hạn header nếu cần tăng bảo mật.                              |
+| `setAllowCredentials(true)`                    | Cho phép gửi cookies và thông tin xác thực qua các request. Bắt buộc nếu frontend cần xác thực người dùng.             |
+| `registerCorsConfiguration("/**", corsConfig)` | Cấu hình CORS áp dụng cho tất cả các endpoint của ứng dụng.                                                            |
+
+### Cấu hình ứng với `application.properties`
+
+```properties
+### Địa chỉ API Gateway được phép gọi đến backend
+apiGatewayUrl=https://api.example.com
+```
+
+> ⚠️ **Lưu ý bảo mật**: Không nên để `allowedOrigins` là `*` nếu `allowCredentials` được bật (`true`). Spring sẽ cảnh báo hoặc từ chối request vì điều này vi phạm chuẩn CORS.
+
+---
+
+## Cấu hình Elasticsearch Client trong Spring Boot
+
+Cấu hình này giúp ứng dụng Spring Boot có thể kết nối tới cụm **Elasticsearch** thông qua Elasticsearch Java API Client (`co.elastic.clients.elasticsearch.ElasticsearchClient`), thay vì dùng các REST call thủ công.
+
+### Mục đích
+
+- Tạo kết nối đến Elasticsearch thông qua `RestClient` và `ElasticsearchTransport`.
+- Thiết lập các header cần thiết cho việc giao tiếp đúng với Elasticsearch.
+- Tạo một `ElasticsearchClient` sẵn sàng sử dụng trong các service hoặc repository.
+
+### Mã nguồn
+
+```java title="ElasticsearchConfig.java"
+@Configuration
+public class ElasticsearchConfig {
+
+    @Value("${elasticsearch.host}")
+    private String elasticsearchHost;
+
+    @Value("${elasticsearch.port}")
+    private String elasticsearchPort;
+
+    @Bean
+    public RestClient getRestClient() {
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("", ""));
+        return RestClient.builder(new HttpHost(elasticsearchHost, Integer.parseInt(elasticsearchPort)))
+                .setHttpClientConfigCallback(httpClientBuilder -> {
+                    httpClientBuilder.disableAuthCaching();
+                    httpClientBuilder.setDefaultHeaders(List.of(
+                            new BasicHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)));
+                    httpClientBuilder.addInterceptorLast((HttpResponseInterceptor) (response, context) ->
+                        response.addHeader("X-Elastic-Product", "Elasticsearch"));
+                    return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                }).build();
+    }
+
+    @Bean
+    public ElasticsearchTransport getElasticsearchTransport() {
+        return new RestClientTransport(getRestClient(), new JacksonJsonpMapper());
+    }
+
+    @Bean
+    public ElasticsearchClient getElasticsearchClient() {
+        return new ElasticsearchClient(getElasticsearchTransport());
+    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                                              | Ý nghĩa                                                                                                                       |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `@Value("${elasticsearch.host}")` & `@Value("${elasticsearch.port}")` | Inject địa chỉ và port của Elasticsearch từ file cấu hình.                                                                    |
+| `RestClient.builder(...)`                                             | Khởi tạo client sử dụng Apache HTTP client.                                                                                   |
+| `disableAuthCaching()`                                                | Tắt cache thông tin xác thực để tránh sai lệch khi có thay đổi quyền.                                                         |
+| `setDefaultHeaders(...)`                                              | Thiết lập header `Content-Type: application/json`.                                                                            |
+| `addInterceptorLast(...)`                                             | Thêm header `X-Elastic-Product: Elasticsearch` vào mọi response — yêu cầu của Elasticsearch từ v8 trở lên để xác thực client. |
+| `CredentialsProvider`                                                 | Dùng để cấu hình xác thực cơ bản (basic auth) nếu Elasticsearch yêu cầu. Trong ví dụ này, username và password đang để rỗng.  |
+| `RestClientTransport`                                                 | Giao tiếp giữa Java API Client và Elasticsearch thông qua transport này.                                                      |
+| `ElasticsearchClient`                                                 | Client chính để thao tác với Elasticsearch: tìm kiếm, index, cập nhật, xóa, v.v.                                              |
+
+### Cấu hình trong `application.properties`
+
+```properties
+elasticsearch.host=localhost
+elasticsearch.port=9200
+```
+
+> 🔐 **Lưu ý bảo mật**: Nếu Elasticsearch yêu cầu authentication, hãy đảm bảo điền đúng username và password tại phần `UsernamePasswordCredentials`.
+
+### Tài liệu tham khảo
+
+- [Elasticsearch Java API Client Documentation](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
+- [Spring Boot + Elasticsearch Integration](https://www.elastic.co/blog/getting-started-with-elasticsearch-and-spring-boot)
+
+---
+
+## Cấu hình Email trong Spring Boot
+
+Cấu hình này giúp ứng dụng Spring Boot có thể gửi email thông qua SMTP server, sử dụng **JavaMailSender** để gửi các email từ ứng dụng của bạn.
+
+### Mục đích
+
+- Cấu hình kết nối với SMTP server để gửi email.
+- Mã hóa mật khẩu email trước khi sử dụng (Base64 decoding).
+- Thiết lập các thuộc tính cần thiết cho việc gửi email qua SMTP.
+
+### Mã nguồn
+
+```java title="EmailConfig.java"
+@Configuration
+public class EmailConfig {
+
+    Logger logger = LogManager.getLogger(EmailConfig.class);
+
+    @Value("${mail.host}")
+    private String mailServerHost;
+
+    @Value("${mail.port}")
+    private String mailServerPort;
+
+    @Value("${mail.username}")
+    private String mailServerUsername;
+
+    @Value("${mail.password}")
+    private String mailServerPassword;
+
+    @Bean
+    public JavaMailSender getJavaMailSender() {
+        String password = new String(Base64.getDecoder().decode(mailServerPassword));
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+
+        mailSender.setHost(mailServerHost);
+        mailSender.setPort(Integer.parseInt(mailServerPort));
+        mailSender.setUsername(mailServerUsername);
+        mailSender.setPassword(password);
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
+
+        return mailSender;
+    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                                                                                       | Ý nghĩa                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `@Value("${mail.host}")`, `@Value("${mail.port}")`, `@Value("${mail.username}")`, `@Value("${mail.password}")` | Inject các thông tin cấu hình về host, port, username và password của SMTP server từ file `application.properties`.            |
+| `Base64.getDecoder().decode(mailServerPassword)`                                                               | Mã hóa mật khẩu email dưới dạng Base64 và giải mã lại để sử dụng trong cấu hình. Điều này bảo vệ mật khẩu trong file cấu hình. |
+| `JavaMailSenderImpl`                                                                                           | Cài đặt `JavaMailSender`, đối tượng chính được sử dụng để gửi email trong Spring Boot.                                         |
+| `mail.transport.protocol`                                                                                      | Xác định giao thức truyền tải, trong trường hợp này là `smtp` để gửi email qua SMTP.                                           |
+| `mail.smtp.auth`                                                                                               | Bật xác thực SMTP (true) để server yêu cầu thông tin đăng nhập.                                                                |
+| `mail.smtp.starttls.enable`                                                                                    | Bật giao thức bảo mật TLS cho kết nối SMTP.                                                                                    |
+| `mail.debug`                                                                                                   | Bật chế độ debug để ghi log chi tiết quá trình gửi email. Điều này hữu ích trong việc debug cấu hình email.                    |
+
+### Cấu hình trong `application.properties`
+
+```properties
+# Cấu hình cho SMTP Server
+mail.host=smtp.mailserver.com
+mail.port=587
+mail.username=your-email@example.com
+mail.password=your-base64-encoded-password
+```
+
+> 🔐 **Lưu ý bảo mật**: Mật khẩu email được lưu trữ dưới dạng mã hóa Base64 trong file cấu hình. Đảm bảo rằng mật khẩu này được mã hóa đúng cách để bảo mật.
+
+### Ví dụ sử dụng `JavaMailSender`
+
+Sau khi cấu hình, bạn có thể sử dụng `JavaMailSender` trong service để gửi email như sau:
+
+```java
+@Service
+public class EmailService {
+
+    private final JavaMailSender emailSender;
+
+    public EmailService(JavaMailSender emailSender) {
+        this.emailSender = emailSender;
+    }
+
+    public void sendSimpleMessage(String to, String subject, String text) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("your-email@example.com");
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(text);
+        emailSender.send(message);
+    }
+}
+```
+
+---
+
+## Cấu hình Kafka Consumer trong Spring Boot
+
+Cấu hình này giúp ứng dụng Spring Boot có thể tiêu thụ (consume) dữ liệu từ các topic Kafka. Kafka Consumer sẽ nhận các message từ Kafka topic và xử lý chúng trong ứng dụng.
+
+### Mục đích
+
+- Cấu hình Consumer kết nối đến Kafka Cluster.
+- Thiết lập các thông số cần thiết để Spring Boot có thể tiêu thụ message từ Kafka.
+- Cấu hình `ConcurrentKafkaListenerContainerFactory` để có thể lắng nghe và xử lý các message đồng thời.
+
+### Mã nguồn
+
+```java title="KafkaConsumerConfig.java"
+@EnableKafka
+@Configuration
+public class KafkaConsumerConfig {
+
+    @Value(value = "${spring.kafka.bootstrap-servers}")
+    private String bootstrapAddress;
+
+    @Value(value = "${kafka.group.id}")
+    private String kafkaGroupId;
+
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaGroupId);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        return factory;
+    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                                                                          | Ý nghĩa                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@Value("${spring.kafka.bootstrap-servers}")`                                                     | Inject địa chỉ của Kafka Cluster từ file cấu hình `application.properties`.                                                                                         |
+| `@Value("${kafka.group.id}")`                                                                     | Inject ID của Consumer Group từ file cấu hình `application.properties`. Mỗi Consumer Group sẽ nhận một bản sao của message, giúp phân phối công việc.               |
+| `ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG`                                                         | Địa chỉ của Kafka Cluster. Các consumer sẽ kết nối tới cluster thông qua các bootstrap server này.                                                                  |
+| `ConsumerConfig.GROUP_ID_CONFIG`                                                                  | Consumer Group ID giúp phân nhóm các consumer trong một nhóm.                                                                                                       |
+| `ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG` & `ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG` | Chỉ định cách deserializing key và value của message. Trong ví dụ này, chúng ta sử dụng `StringDeserializer` cho cả key và value.                                   |
+| `ConcurrentKafkaListenerContainerFactory`                                                         | Cấu hình factory cho các Kafka listener, giúp xử lý các message từ Kafka. Sử dụng `ConcurrentKafkaListenerContainerFactory` cho phép xử lý đồng thời nhiều message. |
+
+### Cấu hình trong `application.properties`
+
+```properties
+# Địa chỉ Kafka Bootstrap Servers
+spring.kafka.bootstrap-servers=localhost:9092
+
+# Kafka Consumer Group ID
+kafka.group.id=my-consumer-group
+```
+
+### Ví dụ sử dụng Kafka Listener
+
+Sau khi cấu hình, bạn có thể sử dụng `@KafkaListener` để lắng nghe các message từ Kafka topic như sau:
+
+```java
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
+
+@Service
+public class KafkaMessageListener {
+
+    @KafkaListener(topics = "my-topic", groupId = "my-consumer-group")
+    public void listen(String message) {
+        System.out.println("Received message: " + message);
+    }
+}
+```
+
+> 🚀 **Lưu ý**: Bạn cần đảm bảo rằng Kafka Cluster đã được cài đặt và chạy trên địa chỉ mà bạn đã cấu hình trong `application.properties`.
+
+---
+
+## Cấu hình Kafka Topic trong Spring Boot
+
+Cấu hình này giúp ứng dụng Spring Boot có thể tạo và quản lý Kafka Topics thông qua `KafkaAdmin`. Điều này hữu ích khi bạn cần tạo các topic động trong môi trường ứng dụng.
+
+### Mục đích
+
+- Cấu hình kết nối với Kafka Cluster để quản lý các Kafka Topics.
+- Khởi tạo `KafkaAdmin` để tương tác với Kafka Cluster.
+
+### Mã nguồn
+
+```java title="KafkaTopicConfig.java"
+@Configuration
+public class KafkaTopicConfig {
+
+    @Value(value = "${spring.kafka.bootstrap-servers}")
+    private String bootstrapAddress;
+
+    @Bean
+    public KafkaAdmin kafkaAdmin() {
+        Map<String, Object> configs = new HashMap<>();
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        return new KafkaAdmin(configs);
+    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                      | Ý nghĩa                                                                                                                |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `@Value("${spring.kafka.bootstrap-servers}")` | Inject địa chỉ của Kafka Cluster từ file cấu hình `application.properties`. Đây là nơi ứng dụng sẽ kết nối tới Kafka.  |
+| `AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG`  | Địa chỉ của Kafka Cluster. Đây là cấu hình bắt buộc để Kafka Admin có thể giao tiếp với Kafka.                         |
+| `KafkaAdmin`                                  | `KafkaAdmin` là lớp quản lý Kafka Admin Client trong Spring. Nó có thể được sử dụng để tạo, xóa, và quản lý các topic. |
+
+### Cấu hình trong `application.properties`
+
+```properties
+# Địa chỉ Kafka Bootstrap Servers
+spring.kafka.bootstrap-servers=localhost:9092
+```
+
+### Ví dụ tạo Topic trong Spring Boot
+
+Sau khi cấu hình Kafka Admin, bạn có thể sử dụng `KafkaAdmin` để tạo topic trong ứng dụng của bạn:
+
+```java
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class KafkaTopicCreator {
+
+    @Autowired
+    private KafkaAdmin kafkaAdmin;
+
+    @Bean
+    public NewTopic myTopic() {
+        return new NewTopic("my-topic", 1, (short) 1); // Tạo topic "my-topic" với 1 partition và replication factor là 1
+    }
+}
+```
+
+> 🔧 **Lưu ý**: Bạn có thể cấu hình thêm các tham số như số lượng partition, replication factor khi tạo topic mới.
+
+---
+
+## Cấu hình Web trong Spring Boot
+
+Cấu hình này bao gồm các thành phần để điều khiển các yêu cầu HTTP, như thiết lập CORS, sử dụng Interceptors để ghi log và cấu hình Argument Resolvers để xử lý các tham số trong phương thức controller.
+
+### Mục đích
+
+- Thiết lập CORS để điều khiển quyền truy cập từ các nguồn khác nhau.
+- Đăng ký Interceptor để ghi log các yêu cầu.
+- Cấu hình Argument Resolver để xử lý tham số trong các phương thức controller.
+
+### Mã nguồn
+
+```java title="WebConfig.java"
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    private final AccessTokenDetailsArgumentResolver accessTokenDetailsArgumentResolver;
+
+    @Value("${apiPrefix}")
+    private String apiPrefix;
+
+    @Value("${spring.front.end.client.url}")
+    private String frontendServer;
+
+    public WebConfig(AccessTokenDetailsArgumentResolver accessTokenDetailsArgumentResolver) {
+        this.accessTokenDetailsArgumentResolver = accessTokenDetailsArgumentResolver;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LoggerInterceptor());
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(accessTokenDetailsArgumentResolver);
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/v1/**")  // Cho phép tất cả các endpoint có prefix "/api/v1/"
+                .allowedOrigins(frontendServer)  // Chỉ cho phép các yêu cầu từ frontendServer
+                .allowedMethods("GET", "POST", "PUT", "DELETE")  // Các phương thức HTTP được phép
+                .allowedHeaders("*")  // Cho phép tất cả các header
+                .allowCredentials(true);  // Cho phép sử dụng các thông tin xác thực (cookies, HTTP authentication, v.v.)
+    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                   | Ý nghĩa                                                                                                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@Value("${apiPrefix}")`                   | Inject tiền tố API từ file cấu hình `application.properties`.                                                                                                     |
+| `@Value("${spring.front.end.client.url}")` | Inject URL của server frontend, giúp kiểm soát nguồn gốc cho CORS.                                                                                                |
+| `addInterceptors()`                        | Đăng ký các Interceptor để xử lý yêu cầu HTTP. Trong ví dụ này, `LoggerInterceptor` được sử dụng để ghi log các yêu cầu HTTP.                                     |
+| `addArgumentResolvers()`                   | Đăng ký các Argument Resolvers. Ở đây, `AccessTokenDetailsArgumentResolver` sẽ giải quyết các tham số trong controller.                                           |
+| `addCorsMappings()`                        | Thiết lập CORS cho các endpoint có prefix `/api/v1/**`, chỉ cho phép các yêu cầu từ `frontendServer`, và cho phép các phương thức HTTP là GET, POST, PUT, DELETE. |
+
+### Cấu hình trong `application.properties`
+
+```properties
+# Tiền tố API
+apiPrefix=/api/v1
+
+# URL của frontend server (giả sử ứng dụng frontend chạy trên localhost:3000)
+spring.front.end.client.url=http://localhost:3000
+```
+
+### Ví dụ sử dụng Interceptor
+
+Khi sử dụng Interceptor, bạn có thể tạo một Interceptor để thực hiện các tác vụ như ghi log. Ví dụ:
+
+```java
+import org.springframework.web.servlet.HandlerInterceptor;
+
+public class LoggerInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("Request received: " + request.getRequestURI());
+        return true;
+    }
+}
+```
+
+> 📄 **Lưu ý**: Interceptors giúp bạn thực hiện các tác vụ trước khi yêu cầu đến controller, chẳng hạn như kiểm tra xác thực, ghi log, hoặc theo dõi thời gian phản hồi.
+
+### Ví dụ sử dụng Argument Resolver
+
+Argument Resolver có thể được sử dụng để giải quyết các tham số tùy chỉnh trong phương thức controller, ví dụ:
+
+```java
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class MyController {
+
+    @GetMapping("/api/v1/test")
+    public String testEndpoint(@RequestParam String accessToken) {
+        // Phương thức này sẽ sử dụng AccessTokenDetailsArgumentResolver để giải quyết accessToken
+        return "Access token: " + accessToken;
+    }
+}
+```
+
+---
+
+## Cấu hình bảo mật Web trong Spring Boot
+
+Cấu hình này giúp ứng dụng Spring Boot bảo vệ các endpoint, điều khiển quyền truy cập và cấu hình bảo mật cho các yêu cầu HTTP.
+
+### Mục đích
+
+- Tắt bảo vệ CSRF (Cross-Site Request Forgery) cho các yêu cầu HTTP.
+- Cấu hình quyền truy cập cho các endpoint khác nhau:
+  - Cho phép tất cả các yêu cầu tới các endpoint bắt đầu bằng `/api/`.
+  - Chỉ cho phép người dùng đã xác thực truy cập các endpoint bắt đầu bằng `/private/`.
+  - Các yêu cầu khác sẽ được phép truy cập mà không yêu cầu xác thực.
+
+### Mã nguồn
+
+```java title="WebSecurityConfig.java"
+@Configuration
+@EnableWebSecurity
+public class WebSecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        return http
+                .csrf(csrf -> csrf.disable())  // Tắt bảo vệ CSRF
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers("/api/.*").permitAll()  // Cho phép tất cả yêu cầu tới các endpoint /api/
+                        .requestMatchers("/private/.*").authenticated()  // Chỉ cho phép người dùng đã xác thực truy cập các endpoint /private/
+                        .anyRequest().permitAll()  // Cho phép tất cả yêu cầu còn lại
+                ).build();
+    }
+
+    // Đoạn mã dưới đây bị comment lại và có thể sử dụng nếu cần tạo người dùng trong bộ nhớ
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        UserDetails user =
+//                User.withDefaultPasswordEncoder()
+//                        .username("user")
+//                        .password("password")
+//                        .roles("USER")
+//                        .build();
+//
+//        return new InMemoryUserDetailsManager(user);
+//    }
+}
+```
+
+### Những cấu hình cần chú ý
+
+| Cấu hình                                         | Ý nghĩa                                                                                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `@EnableWebSecurity`                             | Bật tính năng bảo mật web trong ứng dụng Spring Boot.                                                                           |
+| `csrf().disable()`                               | Tắt bảo vệ CSRF cho các yêu cầu HTTP. Điều này hữu ích cho các API mà không yêu cầu bảo vệ CSRF (ví dụ: API RESTful).           |
+| `requestMatchers("/api/.*").permitAll()`         | Cho phép tất cả các yêu cầu HTTP đến các endpoint bắt đầu với `/api/`. Đây là những endpoint công khai, không yêu cầu xác thực. |
+| `requestMatchers("/private/.*").authenticated()` | Chỉ cho phép người dùng đã xác thực truy cập các endpoint bắt đầu với `/private/`. Những endpoint này yêu cầu xác thực.         |
+| `anyRequest().permitAll()`                       | Cho phép tất cả các yêu cầu còn lại (không được chỉ định rõ trong các `requestMatchers`) mà không yêu cầu xác thực.             |
+
+### Cấu hình trong `application.properties`
+
+```properties
+# Các cấu hình bảo mật có thể được thêm vào file application.properties, ví dụ:
+# Tắt bảo vệ CSRF cho API
+security.csrf.enabled=false
+```
+
+### Tạo người dùng trong bộ nhớ (optional)
+
+Đoạn mã dưới đây đã bị comment lại, nhưng bạn có thể kích hoạt để tạo người dùng trong bộ nhớ cho mục đích thử nghiệm:
+
+```java
+@Bean
+public UserDetailsService userDetailsService() {
+    UserDetails user =
+            User.withDefaultPasswordEncoder()
+                    .username("user")
+                    .password("password")
+                    .roles("USER")
+                    .build();
+
+    return new InMemoryUserDetailsManager(user);
+}
+```
+
+Đoạn mã này tạo một người dùng với tên `user`, mật khẩu `password`, và quyền `USER`. Người dùng này sẽ được lưu trữ trong bộ nhớ và có thể sử dụng để thử nghiệm tính năng xác thực.
+
+### Ví dụ sử dụng xác thực cơ bản
+
+Nếu bạn muốn thêm xác thực cơ bản (Basic Authentication) cho ứng dụng của mình, có thể cấu hình như sau:
+
+```java
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http
+            .csrf(csrf -> csrf.disable())  // Tắt bảo vệ CSRF
+            .authorizeHttpRequests((requests) -> requests
+                    .requestMatchers("/api/.*").permitAll()  // Cho phép tất cả yêu cầu tới các endpoint /api/
+                    .requestMatchers("/private/.*").authenticated()  // Yêu cầu xác thực cho các endpoint /private/
+                    .anyRequest().permitAll()
+            )
+            .httpBasic()  // Bật Basic Authentication
+            .and()
+            .build();
+}
+```
+
+---
