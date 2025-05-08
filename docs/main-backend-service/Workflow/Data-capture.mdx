@@ -1,0 +1,124 @@
+---
+title: Change Data Capture
+sidebar_position: 3
+---
+# Thiết kế hệ thống Change Data Capture để đồng bộ dữ liệu sang Elasticsearch
+
+Như đã đề cập, phần lớn dữ liệu của ứng dụng — bao gồm `desk`, `flashcard`,... — được lưu trữ trong MySQL. Tuy nhiên, khi ứng dụng mở rộng, các use case mới như **search** bắt đầu xuất hiện.
+
+## Vấn đề
+
+MySQL không hỗ trợ tốt các truy vấn tìm kiếm phức tạp (ví dụ: full-text search nâng cao). Tự xây dựng search engine từ đầu là quá phức tạp và không hiệu quả.
+
+## Giải pháp
+
+Chúng ta sử dụng **Elasticsearch** để phục vụ nhu cầu tìm kiếm. Dữ liệu từ MySQL sẽ được **stream** sang Elasticsearch thông qua pipeline:
+
+> **MySQL → Debezium → Kafka → Elasticsearch**
+
+import DataCaptureWorkflow from '@site/src/components/docs/Data-capture-workflow.tsx';
+
+<DataCaptureWorkflow />;
+## Bước 1: Cấu hình MySQL để bật binlog
+
+Debezium sử dụng binlog của MySQL để theo dõi các thay đổi. Nếu bạn đã làm theo hướng dẫn tại `docs/main-backend-service/setup`, bạn đã cài đặt:
+
+- MySQL (và bật binlog)
+- Kafka
+- Debezium
+
+## Bước 2: Đăng ký Kafka Connector cho Debezium
+
+Gửi yêu cầu sau để đăng ký connector với Kafka Connect:
+
+![Postman Example](../../../static/img/connector.png)
+
+```bash
+curl --location 'localhost:8083/connectors/' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "name": "user-main-database",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",
+    "database.hostname": "mysql-container",
+    "database.port": "3306",
+    "database.user": "root",
+    "database.password": "Phamluu2003@",
+    "database.server.id": "184054",
+    "topic.prefix": "dbserver1",
+    "database.include.list": "lexilearn_backend_database",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+    "schema.history.internal.kafka.topic": "schema-changes.lexilearn_backend_database"
+  }
+}'
+```
+
+Sau khi đăng ký thành công, Debezium sẽ bắt đầu stream dữ liệu thay đổi từ MySQL vào các topic Kafka tương ứng.
+
+Bạn có thể mở **Kafka UI** để theo dõi luồng dữ liệu:
+
+![Kafka UI Example](../../../static/img/kafka-ui.png)
+
+---
+
+## Bước 3: Đọc dữ liệu từ Kafka và đẩy vào Elasticsearch
+
+Chúng ta sử dụng Spring Boot để tạo một Kafka Consumer. Bạn có thể tham khảo mã nguồn đầy đủ tại:
+[KafkaConsumer.java](https://github.com/Pham-Duc-Luu/Lexilearn-backend-service-spring-boot/blob/main/src/main/java/MainBackendService/service/kafka/KafkaConsumer.java)
+
+```java
+@Service
+public class KafkaConsumer {
+    private final ElasticsearchOperations elasticsearchOperations;
+    Logger logger = LogManager.getLogger(KafkaConsumer.class);
+
+    public KafkaConsumer(ElasticsearchOperations elasticsearchOperations) {
+        this.elasticsearchOperations = elasticsearchOperations;
+    }
+
+    @KafkaListener(
+        topicPartitions = @TopicPartition(
+            topic = "${kafka.topic.lexilearn.desk}",
+            partitionOffsets = { @PartitionOffset(partition = "0", initialOffset = "0") }
+        ),
+        concurrency = "1"
+    )
+    public void consume(@Payload String message) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        KafkaMysqlMessageStructure<DeskRecord> kafkaMysqlMessageStructure =
+            objectMapper.readValue(message, KafkaMysqlMessageStructure.class);
+        DeskDto deskDto =
+            objectMapper.treeToValue(kafkaMysqlMessageStructure.getPayloadAfter(), DeskDto.class);
+
+        if (deskDto != null) {
+            elasticsearchOperations.save(deskDto, deskDto.getIndexCoordinates());
+        }
+    }
+}
+```
+
+---
+
+## Xác nhận thành công
+
+Khi consumer hoạt động đúng, bạn có thể thấy các log sau đây trong terminal:
+
+```log
+2025-05-11T10:48:55,988 INFO  [...] Fetch position FetchPosition{offset=0,...} is out of range for partition dbserver1.lexilearn_backend_database.Desk-0, resetting offset
+2025-05-11T10:48:55,994 INFO  [...] Resetting offset for partition dbserver1.lexilearn_backend_database.Desk-0 to position ...
+```
+
+Điều này chứng tỏ consumer đã bắt đầu xử lý dữ liệu Kafka và sẵn sàng đồng bộ sang Elasticsearch.
+
+---
+
+## Tổng kết
+
+Pipeline này giúp ứng dụng có thể mở rộng khả năng tìm kiếm mà không cần thay đổi cơ sở dữ liệu gốc. Các công nghệ chính:
+
+- **Debezium** để theo dõi thay đổi MySQL
+- **Kafka** để truyền dữ liệu
+- **Elasticsearch** để hỗ trợ tìm kiếm mạnh mẽ
+
+---

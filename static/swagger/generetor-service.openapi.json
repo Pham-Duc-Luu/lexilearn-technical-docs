@@ -1,0 +1,336 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Text-to-Speech API", "version": "0.1.0" },
+  "paths": {
+    "/generate/audio": {
+      "post": {
+        "tags": ["generate"],
+        "summary": "Generate Audio",
+        "description": "Generate audio from text and return it as a binary WAV file.",
+        "operationId": "generate_audio_generate_audio_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AudioRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "404": { "description": "Not found" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/generate/audio/v2": {
+      "post": {
+        "tags": ["generate"],
+        "summary": "Generate Audio V2",
+        "operationId": "generate_audio_v2_generate_audio_v2_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AmazonPollyTTSRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "404": { "description": "Not found" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/generate/audio/v2/get-voices": {
+      "get": {
+        "tags": ["generate"],
+        "summary": "Getvoice",
+        "operationId": "getVoice_generate_audio_v2_get_voices_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/AmazonPollyVoice" },
+                  "type": "array",
+                  "title": "Response Getvoice Generate Audio V2 Get Voices Get"
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/subscription": {
+      "get": {
+        "tags": ["subscription"],
+        "summary": "Get Current Subscription",
+        "operationId": "get_current_subscription_subscription_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserMonthlySubscription"
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      },
+      "post": {
+        "tags": ["subscription"],
+        "summary": "Subscription For User",
+        "operationId": "subscription_for_user_subscription_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SubscriptionRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "404": { "description": "Not found" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AmazonPollyTTSRequest": {
+        "properties": {
+          "voice_id": { "type": "string", "title": "Voice Id" },
+          "text": { "type": "string", "title": "Text" },
+          "output_format": {
+            "type": "string",
+            "title": "Output Format",
+            "default": "mp3"
+          }
+        },
+        "type": "object",
+        "required": ["voice_id", "text"],
+        "title": "AmazonPollyTTSRequest"
+      },
+      "AmazonPollyVoice": {
+        "properties": {
+          "_id": {
+            "anyOf": [
+              { "type": "string", "example": "5eb7cf5a86d9755df3a6c593" },
+              { "type": "null" }
+            ],
+            "title": "Id",
+            "description": "MongoDB document ObjectID"
+          },
+          "Gender": { "type": "string", "title": "Gender" },
+          "Id": { "type": "string", "title": "Id" },
+          "LanguageCode": { "type": "string", "title": "Languagecode" },
+          "LanguageName": { "type": "string", "title": "Languagename" },
+          "Name": { "type": "string", "title": "Name" },
+          "SupportedEngines": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Supportedengines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "Gender",
+          "Id",
+          "LanguageCode",
+          "LanguageName",
+          "Name",
+          "SupportedEngines"
+        ],
+        "title": "AmazonPollyVoice"
+      },
+      "AudioRequest": {
+        "properties": {
+          "text": { "type": "string", "title": "Text" },
+          "voice": {
+            "type": "string",
+            "title": "Voice",
+            "default": "af_heart"
+          },
+          "lang_code": {
+            "type": "string",
+            "enum": ["a", "j", "z", "f"],
+            "title": "Lang Code",
+            "default": "a"
+          }
+        },
+        "type": "object",
+        "required": ["text"],
+        "title": "AudioRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "SubscriptionDetail": {
+        "properties": {
+          "total_character": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Character"
+          },
+          "spent_character": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Spent Character"
+          },
+          "supported_engine": {
+            "items": { "type": "string", "enum": ["neural", "standard"] },
+            "type": "array",
+            "title": "Supported Engine"
+          }
+        },
+        "type": "object",
+        "required": ["total_character", "spent_character", "supported_engine"],
+        "title": "SubscriptionDetail"
+      },
+      "SubscriptionRequest": {
+        "properties": {
+          "subscription_plan": {
+            "type": "string",
+            "enum": ["basic", "start", "pro", "business"],
+            "title": "Subscription Plan"
+          }
+        },
+        "type": "object",
+        "required": ["subscription_plan"],
+        "title": "SubscriptionRequest"
+      },
+      "UserMonthlySubscription": {
+        "properties": {
+          "_id": {
+            "anyOf": [
+              { "type": "string", "example": "5eb7cf5a86d9755df3a6c593" },
+              { "type": "null" }
+            ],
+            "title": "Id",
+            "description": "MongoDB document ObjectID"
+          },
+          "start_date": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "End Date"
+          },
+          "user_uuid": { "type": "string", "title": "User Uuid" },
+          "user_email": {
+            "anyOf": [
+              { "type": "string", "format": "email" },
+              { "type": "null" }
+            ],
+            "title": "User Email"
+          },
+          "subscription_plan": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["basic", "start", "pro", "business"]
+              },
+              { "type": "null" }
+            ],
+            "title": "Subscription Plan"
+          },
+          "subscription_detail": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/SubscriptionDetail" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "type": "object",
+        "required": ["user_uuid"],
+        "title": "UserMonthlySubscription"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": { "HTTPBearer": { "type": "http", "scheme": "bearer" } }
+  }
+}

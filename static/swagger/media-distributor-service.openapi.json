@@ -1,0 +1,243 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "My API Documentation",
+    "description": "This is a sample Spring Boot API documentation with Swagger.",
+    "contact": { "name": "Your Name", "email": "your.email@example.com" },
+    "version": "1.0"
+  },
+  "servers": [
+    { "url": "http://localhost:5002", "description": "Generated server url" }
+  ],
+  "paths": {
+    "/api/v1/images/private/upload": {
+      "post": {
+        "tags": ["photo-controller"],
+        "operationId": "uploadImage",
+        "parameters": [
+          {
+            "name": "userJWTObject",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/UserJWTObject" }
+          },
+          {
+            "name": "image_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SM (240x144)",
+                "LD (320x240)",
+                "SD (720x480)",
+                "HD (1280x720)",
+                "FHD (1920x1080)"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["image"],
+                "type": "object",
+                "properties": {
+                  "image": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audio/private/upload": {
+      "post": {
+        "tags": ["audio-controller"],
+        "operationId": "uploadImage_1",
+        "parameters": [
+          {
+            "name": "userJWTObject",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/UserJWTObject" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["audio"],
+                "type": "object",
+                "properties": {
+                  "audio": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/hello-world": {
+      "get": {
+        "tags": ["helloword"],
+        "operationId": "helloword",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/images": {
+      "get": {
+        "tags": ["photo-controller"],
+        "operationId": "getImage",
+        "parameters": [
+          {
+            "name": "image_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "image_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SM (240x144)",
+                "LD (320x240)",
+                "SD (720x480)",
+                "HD (1280x720)",
+                "FHD (1920x1080)"
+              ]
+            }
+          },
+          {
+            "name": "userJWTObject",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/UserJWTObject" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/images/search": {
+      "get": {
+        "tags": ["photo-controller"],
+        "operationId": "searchPhoto",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 30 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audio": {
+      "get": {
+        "tags": ["audio-controller"],
+        "operationId": "getImage_1",
+        "parameters": [
+          {
+            "name": "audio_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "userJWTObject",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/UserJWTObject" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserJWTObject": {
+        "type": "object",
+        "properties": {
+          "user_email": { "type": "string" },
+          "user_name": { "type": "string" },
+          "user_id": { "type": "string" },
+          "user_uuid": { "type": "string" }
+        }
+      }
+    }
+  }
+}

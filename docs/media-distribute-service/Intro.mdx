@@ -1,0 +1,28 @@
+---
+sidebar_position: 1
+---
+
+# Giới thiệu
+
+**Media Distributor** là một ứng dụng Spring Boot được thiết kế để xử lý, vận chuyển và phân phối các tệp media (như `.mp3`, `.jpg`, `.mp4`, v.v.) trong kiến trúc microservice.
+
+Ứng dụng đóng vai trò là **cầu nối quan trọng** giúp các dịch vụ trong hệ thống có thể:
+
+- Nhận và xử lý các file media từ người dùng hoặc các dịch vụ khác
+- Tự động phân phối các file này đến các nền tảng lưu trữ đám mây như **Amazon S3**
+- Hỗ trợ các dịch vụ phân tích, tìm kiếm và trích xuất dữ liệu media thông qua metadata hoặc các cơ chế tích hợp
+
+## Mục tiêu chính
+
+- Đảm bảo việc **truyền tải và lưu trữ tệp media hiệu quả**
+- Tích hợp dễ dàng với các dịch vụ cloud phổ biến
+- Mở rộng khả năng sử dụng media trong toàn bộ hệ sinh thái microservice
+
+## Ví dụ sử dụng
+
+- Người dùng tải lên một video (`.mp4`): hệ thống sẽ đưa file này lên S3, đồng thời gửi metadata đến các service phân tích nội dung
+- Một dịch vụ AI yêu cầu ảnh từ một người dùng cụ thể: Media Distributor sẽ cung cấp đường dẫn truy cập an toàn đến file đó trên cloud
+
+---
+
+> Media Distributor là một phần không thể thiếu trong các hệ thống hiện đại có nhu cầu xử lý dữ liệu đa phương tiện với độ trễ thấp và khả năng mở rộng cao.

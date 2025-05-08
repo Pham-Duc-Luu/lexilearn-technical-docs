@@ -1,24 +1,30 @@
 import { icons as devicon } from '@iconify-json/devicon';
 import { icons as logos } from '@iconify-json/logos';
 import { icons as material_icon } from '@iconify-json/material-icon-theme';
+import { icons as material_symbols } from '@iconify-json/material-symbols';
 
 import Mermaid from '@theme/Mermaid';
 import mermaid from 'mermaid';
+mermaid.registerIconPacks([
+  {
+    name: logos.prefix, // To use the prefix defined in the icon pack
+    icons: logos,
+  },
+  {
+    name: material_icon.prefix, // To use the prefix defined in the icon pack
+    icons: material_icon,
+  },
+  {
+    name: devicon.prefix, // To use the prefix defined in the icon pack
+    icons: devicon,
+  },
+  {
+    name: material_symbols.prefix, // To use the prefix defined in the icon pack
+    icons: material_symbols,
+  },
+]);
 export default function SystemDesign({ children, color }) {
-  mermaid.registerIconPacks([
-    {
-      name: logos.prefix, // To use the prefix defined in the icon pack
-      icons: logos,
-    },
-    {
-      name: material_icon.prefix, // To use the prefix defined in the icon pack
-      icons: material_icon,
-    },
-    {
-      name: devicon.prefix, // To use the prefix defined in the icon pack
-      icons: devicon,
-    },
-  ]);
+
   return (
     <Mermaid
       value={`architecture-beta
@@ -40,7 +46,6 @@ export default function SystemDesign({ children, color }) {
                     spring_boot_server:R -- L:database1      
                     fastapi_server:R -- L:database2     
                     fastapi_server:B -- L:database3      
-
 
     `}
     />

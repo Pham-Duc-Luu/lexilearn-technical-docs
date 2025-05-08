@@ -23,7 +23,153 @@ git clone https://github.com/Pham-Duc-Luu/Lexilearn-backend-service-spring-boot.
 cd Lexilearn-backend-service-spring-boot
 ```
 
+## Docker compose
+bạn có thể set up bằng file docker compose https://github.com/Pham-Duc-Luu/Lexilearn-CICI/blob/main/docker-compose-debezium.yml
+
+
+## Cài đặt mysql
+
+Main spring boot dùng mysql như là cở sở dữ liệu chính của ứng dụng, vậy nên bạn cần cài đặt mysql trong quán trình phát triển.
+
+Bạn có thể cài đặt mysql 8:0 ở trang web chính thức [ở đây](https://dev.mysql.com/downloads/)
+
+hoặc dùng docker-compose :
+
+```yml title="Set-up-mysql.yml"
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Phamluu2003.
+      MYSQL_DATABASE: lexilearn
+      MYSQL_USER: user_1
+      MYSQL_PASSWORD: user_1
+    ports:
+      - '3306:3306'
+    networks:
+      - debezium-server
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-custom.cnf:/etc/mysql/conf.d/mysql-custom.cnf # <-- mount your config file
+
+```
+
+```cnf title="mysql-custom.cnf"
+server-id         = 223344 # Querying variable is called server_id, e.g. SELECT variable_value FROM information_schema.global_variables WHERE variable_name='server_id';
+log_bin                     = mysql-bin
+binlog_format               = ROW
+binlog_row_image            = FULL
+binlog_expire_logs_seconds  = 864000
+enforce_gtid_consistency = ON
+gtid_mode = ON
+binlog_rows_query_log_events=ON
+```
+
+Cài này sẽ bật log của mysql để có thể thực hiện Change data capture, bạn có thể tìm hiểu thêm [ở đây](Workflow/Data-capture)
+
+```bash
+sudo docker compose up -f Set-up-mysql.yml
+```
+
+## Cài đặt Elasticsearch
+Bạn có thể cài đặt Elasticsearch ở [trang web chính thức ](https://www.elastic.co/downloads/elasticsearch)
+
+Hoặc dùng cài đặt với docker với file docker-compose dưới đây.
+
+```yml title="Set-up-Es.yml"
+services:
+ elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    container_name: elasticsearch-container
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+```
+```bash
+sudo docker compose up -f Set-up-Es.yml
+```
+
+## Cài đặt Zookeeper, kafka và Debezium
+
+```yml title="Set-up-Kafka.yml"
+  zookeeper:
+    image: quay.io/debezium/zookeeper:3.0
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    networks:
+      - debezium-server
+
+  kafka:
+    image: quay.io/debezium/kafka:3.0
+    container_name: kafka
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+    networks:
+      - debezium-server
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - 9089:8080
+    depends_on:
+      - kafka
+    networks:
+      - debezium-server
+
+  connect-mysql:
+    image: quay.io/debezium/connect:3.0
+    container_name: connect-mysql
+    ports:
+      - 8083:8083
+    depends_on:
+      - kafka
+    networks:
+      - debezium-server
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=connect_mysql_configs
+      - OFFSET_STORAGE_TOPIC=connect_mysql_offsets
+      - STATUS_STORAGE_TOPIC=connect_mysql_statuses
+      - REST_HOST_NAME=0.0.0.0
+
+networks:
+  debezium-server:
+    external: true # Ensure all containers are in the same network
+
+```
+```bash
+sudo docker compose up -f Set-up-Kafka.yml
+```
+
+
+
 ## 🛠️ Cài đặt & Cấu hình MySQL
+
 
 ### ✅ 1. Tạo Database
 
