@@ -1,0 +1,93 @@
+---
+sidebar_position: 2
+---
+
+# Set up
+
+Hướng dẫn này cung cấp các bước cần thiết để thiết lập và chạy ứng dụng **Media Distributor**, một ứng dụng Spring Boot được thiết kế để xử lý, vận chuyển và phân phối các tệp media trong hệ thống microservice.
+
+## Yêu cầu hệ thống
+
+Trước khi bắt đầu, hãy đảm bảo hệ thống của bạn đáp ứng các yêu cầu sau:
+
+- **Java**: JDK 21 (được chỉ định trong `pom.xml`).
+- **Maven**: Phiên bản mới nhất (khuyến nghị 3.8.0 trở lên).
+- **MongoDB**: Đảm bảo có một instance MongoDB đang chạy (nếu sử dụng MongoDB để lưu trữ dữ liệu).
+- **Amazon S3**: Cấu hình tài khoản AWS và thông tin xác thực để truy cập S3.
+- **Elasticsearch**: Cài đặt và chạy Elasticsearch (phiên bản tương thích với `elasticsearch-java` 8.17.2).
+- **IDE**: IntelliJ IDEA, Eclipse hoặc bất kỳ IDE nào hỗ trợ Spring Boot.
+
+## Cài đặt môi trường
+
+1. **Cài đặt Java 21**:
+
+   - Tải và cài đặt JDK 21 từ [trang chính thức của Oracle](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) hoặc sử dụng OpenJDK.
+   - Cấu hình biến môi trường `JAVA_HOME` và thêm `bin` vào `PATH`.
+
+2. **Cài đặt Maven**:
+
+   - Tải Maven từ [trang chính thức](https://maven.apache.org/download.cgi) và làm theo hướng dẫn cài đặt.
+   - Chạy lệnh `mvn -v` để kiểm tra phiên bản Maven.
+
+3. **Cài đặt MongoDB** (nếu sử dụng):
+
+   - Tải và cài đặt MongoDB từ [trang chính thức](https://www.mongodb.com/try/download/community).
+   - Khởi động MongoDB bằng lệnh `mongod`.
+
+4. **Cấu hình AWS S3**:
+
+   - Tạo tài khoản AWS và thiết lập thông tin xác thực (Access Key và Secret Key).
+   - Lưu thông tin xác thực trong tệp `~/.aws/credentials` hoặc cấu hình trong ứng dụng.
+
+5. **Cài đặt Elasticsearch**:
+   - Tải và cài đặt Elasticsearch từ [trang chính thức](https://www.elastic.co/downloads/elasticsearch).
+   - Khởi động Elasticsearch và đảm bảo nó chạy trên `localhost:9200`.
+
+## Thiết lập dự án
+
+1. **Sao chép mã nguồn**:
+
+   - Clone hoặc tải mã nguồn dự án từ kho lưu trữ của bạn.
+   - Điều hướng đến thư mục dự án: `cd media-distributor`.
+
+2. **Cấu hình tệp `pom.xml`**:
+
+   - Tệp `pom.xml` đã được cung cấp và bao gồm tất cả các phụ thuộc cần thiết như Spring Boot, AWS S3 SDK, MongoDB, Elasticsearch, v.v.
+   - Đảm bảo không có lỗi cú pháp trong tệp `pom.xml`.
+
+3. **Cài đặt phụ thuộc**:
+
+   - Trong thư mục dự án, chạy lệnh sau để tải và cài đặt các phụ thuộc:
+     ```bash
+     mvn clean install
+     ```
+
+4. **Cấu hình ứng dụng**:
+
+   - Bạn có thể tìm hiểu thêm ở phần [configuration](configuration)
+
+5. **Chạy ứng dụng**:
+   - Chạy ứng dụng bằng lệnh Maven:
+     ```bash
+     mvn spring-boot:run
+     ```
+   - Hoặc, nếu sử dụng IDE, chạy lớp chính của ứng dụng (ví dụ: `com.application.Application`).
+
+## Kiểm tra ứng dụng
+
+- Sau khi ứng dụng khởi động, truy cập Swagger UI để kiểm tra các API:
+  - URL: `http://localhost:8080/swagger-ui.html`
+- Đảm bảo các kết nối đến MongoDB, S3 và Elasticsearch hoạt động bình thường bằng cách kiểm tra log ứng dụng.
+
+## Lưu ý
+
+- Nếu gặp lỗi liên quan đến phiên bản phụ thuộc, hãy kiểm tra tính tương thích trong `pom.xml` và cập nhật phiên bản mới nhất nếu cần.
+- Đảm bảo các dịch vụ bên ngoài (MongoDB, Elasticsearch, AWS S3) được cấu hình chính xác trước khi chạy ứng dụng.
+- Để chạy các bài kiểm tra, sử dụng lệnh:
+  ```bash
+  mvn test
+  ```
+
+## Kết luận
+
+Sau khi hoàn thành các bước trên, ứng dụng Media Distributor sẽ sẵn sàng để xử lý và phân phối các tệp media. Nếu bạn cần thêm thông tin về cách triển khai hoặc mở rộng ứng dụng, hãy tham khảo các tài liệu khác trong dự án.

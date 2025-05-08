@@ -1,0 +1,238 @@
+---
+sidebar_position: 3
+---
+
+# Configuration
+
+Tài liệu này hướng dẫn cách cấu hình ứng dụng **Media Distributor** bằng tệp `application.properties` (hoặc `application.yml`) trong thư mục `src/main/resources`. Tệp này chứa các thuộc tính cần thiết để kết nối với các dịch vụ bên ngoài, cấu hình API, và thiết lập hành vi của ứng dụng.
+
+## Tổng quan về tệp `application.properties`
+
+Tệp `application.properties` định nghĩa các cấu hình cho:
+
+- Cổng server và API Gateway.
+- Kết nối đến các dịch vụ như MongoDB, Elasticsearch, AWS S3, Cloudinary, và Unsplash.
+- Cấu hình JWT cho xác thực.
+- Giới hạn kích thước tệp tải lên.
+- Logging và Swagger UI.
+- Cấu hình cơ sở dữ liệu (Hibernate, JPA).
+
+Dưới đây là hướng dẫn chi tiết về từng nhóm thuộc tính và cách thiết lập chúng.
+
+## Cấu hình chi tiết
+
+### 1. Cấu hình Server và API
+
+```properties
+server.port=${APP_PORT}
+apiPrefix=/api/v1
+spring.api-gateway.url=http://localhost:5000
+spring.application.name=media distributor service in spring boot
+```
+
+- `server.port`: Cổng mà ứng dụng chạy. Đặt giá trị này qua biến môi trường `APP_PORT` (mặc định: 8080).
+- `apiPrefix`: Tiền tố cho các endpoint API (ví dụ: `/api/v1/upload`).
+- `spring.api-gateway.url`: URL của API Gateway (nếu sử dụng). Cập nhật nếu API Gateway chạy trên host/port khác.
+- `spring.application.name`: Tên ứng dụng, sử dụng trong logging và giám sát.
+
+**Hành động**:
+
+- Đặt biến môi trường `APP_PORT` hoặc sửa trực tiếp trong tệp nếu không dùng biến môi trường.
+
+### 2. Cấu hình cơ sở dữ liệu
+
+```properties
+spring.data.mongodb.uri=${MONGODB_URL}
+spring.data.mongodb.database=${MONGO_USER_IMAGE_DATASTORE}
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jackson.property-naming-strategy=SNAKE_CASE
+```
+
+- `spring.data.mongodb.uri`: URI kết nối MongoDB (ví dụ: `mongodb://localhost:27017`).
+- `spring.data.mongodb.database`: Tên cơ sở dữ liệu MongoDB để lưu trữ dữ liệu hình ảnh.
+- `spring.jpa.properties.hibernate.dialect` và `spring.jpa.database-platform`: Cấu hình Hibernate cho PostgreSQL và MySQL. **Lưu ý**: Chỉ nên sử dụng một dialect phù hợp với cơ sở dữ liệu thực tế.
+- `spring.jpa.hibernate.ddl-auto`: Tự động cập nhật schema cơ sở dữ liệu khi khởi động.
+- `spring.jpa.show-sql`: Hiển thị các câu lệnh SQL trong console.
+- `spring.jackson.property-naming-strategy`: Sử dụng định dạng `snake_case` cho JSON.
+
+**Hành động**:
+
+- Đặt biến môi trường `MONGODB_URL` và `MONGO_USER_IMAGE_DATASTORE`.
+- Xác định cơ sở dữ liệu chính (PostgreSQL hoặc MySQL) và xóa dialect không cần thiết.
+
+### 3. Cấu hình AWS S3
+
+```properties
+spring.application.s3.bucket-name=${AWS_S3_BUCKET_NAME}
+spring.application.s3.bucket-key=${AWS_S3_BUCKET_KEY}
+spring.application.s3.bucket-secret=${AWS_S3_BUCKET_SECRET}
+spring.application.s3.bucket-region=${AWS_S3_REGION}
+spring.application.s3.presignurl.duration=${AWS_S3_PRESIGNED_URL_HOUR_DURATION}
+```
+
+- `spring.application.s3.bucket-name`: Tên bucket S3.
+- `spring.application.s3.bucket-key` và `spring.application.s3.bucket-secret`: Thông tin xác thực AWS.
+- `spring.application.s3.bucket-region`: Vùng AWS (ví dụ: `us-east-1`).
+- `spring.application.s3.presignurl.duration`: Thời gian hiệu lực của URL được ký trước (tính bằng giờ).
+
+**Hành động**:
+
+- Đặt các biến môi trường `AWS_S3_BUCKET_NAME`, `AWS_S3_BUCKET_KEY`, `AWS_S3_BUCKET_SECRET`, `AWS_S3_REGION`, và `AWS_S3_PRESIGNED_URL_HOUR_DURATION`.
+- Đảm bảo bucket S3 đã được tạo và thông tin xác thực hợp lệ.
+
+### 4. Cấu hình Elasticsearch
+
+```properties
+elasticsearch.host=${ELASTICSEARCH_HOST}
+elasticsearch.port=${ELASTICSEARCH_PORT}
+spring.data.elasticsearch.repositories.enabled=true
+spring.elasticsearch.rest.uris=http://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
+```
+
+- `elasticsearch.host` và `elasticsearch.port`: Địa chỉ và cổng của Elasticsearch.
+- `spring.data.elasticsearch.repositories.enabled`: Kích hoạt repository Elasticsearch.
+- `spring.elasticsearch.rest.uris`: URI REST của Elasticsearch.
+
+**Hành động**:
+
+- Đặt biến môi trường `ELASTICSEARCH_HOST` (mặc định: `localhost`) và `ELASTICSEARCH_PORT` (mặc định: `9200`).
+- Đảm bảo Elasticsearch đang chạy trước khi khởi động ứng dụng.
+
+### 5. Cấu hình Cloudinary và Unsplash
+
+```properties
+spring.application.cloudinary.url=${CLOUDINARY_URL}
+spring.application.upsplash.url=${UPSPLASH_URL}
+spring.application.upsplash.access-token=${UPSPLASH_ACCESS_TOKEN}
+```
+
+- `spring.application.cloudinary.url`: URL kết nối đến Cloudinary.
+- `spring.application.upsplash.url` và `spring.application.upsplash.access-token`: URL và token truy cập Unsplash API.
+
+**Hành động**:
+
+- Đặt các biến môi trường `CLOUDINARY_URL`, `UPSPLASH_URL`, và `UPSPLASH_ACCESS_TOKEN`.
+- Đảm bảo tài khoản Cloudinary và Unsplash được thiết lập.
+
+### 6. Cấu hình JWT
+
+```properties
+user.jwt.access-token.public-key.path=jwt-key/public.pem
+user.jwt.access-token.algorithm=RSA256
+jwt.public.key=${JWT_PUBLIC_KEY}
+spring.application.api-key=${API_KEY}
+```
+
+- `user.jwt.access-token.public-key.path`: Đường dẫn đến tệp khóa công khai JWT.
+- `user.jwt.access-token.algorithm`: Thuật toán mã hóa JWT (RSA256).
+- `jwt.public.key`: Giá trị khóa công khai JWT.
+- `spring.application.api-key`: Khóa API của ứng dụng.
+
+**Hành động**:
+
+- Đặt biến môi trường `JWT_PUBLIC_KEY` và `API_KEY`.
+- Đảm bảo tệp `public.pem` tồn tại trong thư mục `jwt-key`.
+
+### 7. Cấu hình tải lên tệp
+
+```properties
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+- Giới hạn kích thước tệp tải lên và yêu cầu HTTP là 10MB.
+
+**Hành động**:
+
+- Điều chỉnh giá trị nếu cần kích thước lớn hơn.
+
+### 8. Cấu hình Logging
+
+```properties
+logging.level.com.example=DEBUG
+logging.file.name=app-log.log
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+spring.output.ansi.enabled=always
+```
+
+- `logging.level.com.example`: Mức độ logging cho package `com.example` (DEBUG).
+- `logging.file.name`: Tên tệp log.
+- `logging.pattern.console` và `logging.pattern.file`: Định dạng log.
+- `spring.output.ansi.enabled`: Kích hoạt màu sắc trong console.
+
+**Hành động**:
+
+- Điều chỉnh mức độ logging hoặc định dạng nếu cần.
+
+### 9. Cấu hình Swagger UI
+
+```properties
+springdoc.api-docs.path=/docs/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+```
+
+- Định nghĩa đường dẫn cho tài liệu API và giao diện Swagger UI.
+
+**Hành động**:
+
+- Truy cập `http://localhost:8080/swagger-ui.html` để kiểm tra API sau khi ứng dụng chạy.
+
+### 10. Cấu hình tài nguyên tĩnh
+
+```properties
+spring.web.resources.static-locations=classpath:/public/
+```
+
+- Định nghĩa thư mục chứa tài nguyên tĩnh (ví dụ: HTML, CSS, JS).
+
+**Hành động**:
+
+- Đặt các tệp tĩnh trong thư mục `src/main/resources/public`.
+
+## Thiết lập biến môi trường
+
+Để đảm bảo ứng dụng hoạt động, bạn cần thiết lập các biến môi trường sau (thay thế giá trị mẫu bằng giá trị thực tế):
+
+```bash
+export APP_PORT=8080
+export MONGODB_URL=mongodb://localhost:27017
+export MONGO_USER_IMAGE_DATASTORE=media_distributor
+export AWS_S3_BUCKET_NAME=your-bucket-name
+export AWS_S3_BUCKET_KEY=your-access-key
+export AWS_S3_BUCKET_SECRET=your-secret-key
+export AWS_S3_REGION=us-east-1
+export AWS_S3_PRESIGNED_URL_HOUR_DURATION=24
+export ELASTICSEARCH_HOST=localhost
+export ELASTICSEARCH_PORT=9200
+export CLOUDINARY_URL=your-cloudinary-url
+export UPSPLASH_URL=https://api.unsplash.com
+export UPSPLASH_ACCESS_TOKEN=your-unsplash-token
+export JWT_PUBLIC_KEY=your-jwt-public-key
+export API_KEY=your-api-key
+```
+
+Hoặc, tạo tệp `.env` trong thư mục gốc của dự án với nội dung tương tự và đảm bảo `spring.config.import=optional:file:.env[.properties]` được giữ nguyên.
+
+## Kiểm tra cấu hình
+
+1. Đảm bảo tất cả các biến môi trường được đặt đúng.
+2. Chạy ứng dụng bằng:
+   ```bash
+   mvn spring-boot:run
+   ```
+3. Kiểm tra log trong `app-log.log` và console để xác nhận kết nối đến MongoDB, Elasticsearch, S3, v.v.
+4. Truy cập `http://localhost:8080/swagger-ui.html` để kiểm tra các API.
+
+## Lưu ý
+
+- Nếu sử dụng PostgreSQL hoặc MySQL, hãy đảm bảo kết nối cơ sở dữ liệu được cấu hình đúng trong `application.properties`.
+- Kiểm tra tính tương thích của các phiên bản phụ thuộc trong `pom.xml` để tránh xung đột.
+- Nếu gặp lỗi liên quan đến JWT, hãy xác minh tệp `public.pem` và khóa công khai.
+
+## Kết luận
+
+Việc cấu hình đúng tệp `application.properties` là bước quan trọng để đảm bảo Media Distributor hoạt động trơn tru. Sau khi hoàn thành, ứng dụng sẽ sẵn sàng xử lý và phân phối các tệp media trong hệ thống microservice.

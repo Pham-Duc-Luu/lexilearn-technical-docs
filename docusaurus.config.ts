@@ -79,6 +79,16 @@ const config: Config = {
             spec: 'static/swagger/openapi.json',
             route: 'docs/api/main-spring-boot',
           },
+          {
+            // Redocusaurus will automatically bundle your spec into a single file during the build
+            spec: 'static/swagger/generetor-service.openapi.json',
+            route: 'docs/api/generator-service',
+          },
+          {
+            // Redocusaurus will automatically bundle your spec into a single file during the build
+            spec: 'static/swagger/media-distributor-service.openapi.json',
+            route: 'docs/api/media-distributor-service',
+          },
         ],
       },
     ] satisfies Redocusaurus.PresetEntry,
