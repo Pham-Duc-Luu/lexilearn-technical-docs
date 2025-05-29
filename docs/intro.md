@@ -39,8 +39,6 @@ Hệ thống tự động điều chỉnh lịch ôn tập dựa trên mức đ�
 
 ---
 
-## sidebar_position: 3
-
 # Kiến trúc hệ thống
 
 Lexilearn được xây dựng theo mô hình **microservice** hiện đại, cho phép mở rộng linh hoạt, dễ bảo trì và phân chia rõ ràng giữa các chức năng.

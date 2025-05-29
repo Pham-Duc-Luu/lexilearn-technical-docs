@@ -4,6 +4,7 @@ import Heading from '@theme/Heading';
 import Layout from '@theme/Layout';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
+import { Recruition } from '../components/HomepageFeatures';
 import styles from './index.module.css';
 
 function HomepageHeader() {
@@ -46,28 +47,6 @@ export default function Home(): ReactNode {
             gap: 20,
           }}>
           <span>Studying languages in a funny, interactive, and smarter</span>
-          {/* <span
-            style={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'start',
-              gap: 100,
-            }}>
-            <button
-              className={clsx('button button--primary')}
-              style={{
-                fontSize: 20,
-              }}>
-              Get early access
-            </button>
-            <button
-              className={clsx('button button--primary')}
-              style={{
-                fontSize: 20,
-              }}>
-              Become a developer
-            </button>
-          </span> */}
         </Heading>
         <img
           width={100}
@@ -79,7 +58,9 @@ export default function Home(): ReactNode {
           }}
           src={LogoUrl}></img>
       </div>
-      <main>{/* <HomepageFeatures /> */}</main>
+      <main>
+        <Recruition></Recruition>
+      </main>
     </Layout>
   );
 }

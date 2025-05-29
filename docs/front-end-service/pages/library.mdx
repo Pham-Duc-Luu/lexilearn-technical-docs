@@ -1,0 +1,97 @@
+---
+title: User's Library
+sidebar_position: 1
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<img
+  src={useBaseUrl('/img/library-page.png')}
+  alt="Library Page Screenshot"
+  style={{
+    border: '1px solid #ccc',
+    borderRadius: '8px',
+    marginBottom: '1rem',
+  }}
+/>
+
+## Tổng quan
+
+Trang **User's Library** là nơi người dùng quản lý các bộ flashcards đã tạo hoặc lưu trữ. Giao diện được chia thành nhiều khu vực chức năng giúp người dùng dễ dàng tìm kiếm, phân loại và ôn tập.
+
+---
+
+## Các thành phần chính
+
+### 🧭 Navbar
+
+- Nằm phía trên cùng.
+- Bao gồm:
+  - Logo ứng dụng **Lexilearn**.
+  - Biểu tượng chuông thông báo.
+  - Avatar người dùng (hoặc menu người dùng).
+
+---
+
+### 📚 Sidebar
+
+- Nằm bên trái giao diện.
+- Cung cấp các lựa chọn điều hướng:
+  - **Previous** – danh sách các desk đã ôn tập.
+  - **Liked** – các desk đã đánh dấu yêu thích.
+
+---
+
+### 🔍 Search Input
+
+- Trường nhập liệu để tìm kiếm desk theo từ khóa.
+- Khi người dùng nhập, frontend áp dụng kỹ thuật **debounce**:
+  - Chỉ thực hiện truy vấn khi input không thay đổi trong **0.3 giây**.
+- Kết quả tìm kiếm sẽ hiển thị bên dưới phần **List of desk**.
+
+---
+
+### 📂 List of Desk
+
+Danh sách các desk đang có trong thư viện người dùng, gồm 4 tab phân loại:
+
+- **Desk** (Tất cả)
+- **Published** (Đã xuất bản)
+- **Drafted** (Bản nháp)
+- **Bin** (Đã xóa)
+
+Mỗi desk hiển thị:
+
+- **Tên desk**
+- **Số lượng flashcard**
+- **Số lượng flashcard cần ôn tập**
+- **Nút `review`** để bắt đầu ôn tập
+- **Menu tùy chọn** (3 chấm) để chỉnh sửa hoặc xóa
+
+---
+
+### 📄 Pagination
+
+- Nằm dưới danh sách desk.
+- Giúp người dùng chuyển giữa các trang chứa desk cũ hơn.
+- Giao diện phân trang rõ ràng với các nút số và nút điều hướng (`<`, `>`, `...`).
+
+---
+
+## 📌 Ghi chú kỹ thuật
+
+- Debounce có thể được thực hiện bằng thư viện như `lodash` hoặc custom hook.
+- Các desk được lấy từ API và cache tạm thời để tăng hiệu suất.
+- Mỗi desk có trạng thái riêng biệt phục vụ cho các chức năng lọc, tìm kiếm, và phân trang.
+
+---
+
+## 💡 Gợi ý cải tiến
+
+- Hỗ trợ gộp desk theo nhóm chuyên đề.
+- Hiển thị tiến độ học tập tổng quan.
+- Cho phép kéo & thả để sắp xếp thứ tự desk.
+
+---
+
+Nếu bạn cần tài liệu cho các thành phần khác của ứng dụng, ví dụ như trang **Desk Detail** hoặc **Flashcard Review**, mình có thể tiếp tục hỗ trợ viết phần đó!

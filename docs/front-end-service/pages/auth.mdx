@@ -1,0 +1,44 @@
+---
+title: Sign up / sign in
+sidebar_position: 2
+---
+
+## Giới thiệu
+
+Giao diện người dùng của Lexilearn bao gồm các màn hình chính: **Đăng nhập/Đăng ký** và **Thư viện học liệu**. Tài liệu này sẽ mô tả chi tiết các component chính trong từng giao diện.
+
+---
+
+## Giao diện Đăng nhập và Đăng ký
+
+### 1. Đăng ký tài khoản
+
+<img src={require('@site/static/img/sign-up.png').default} />
+
+#### Các thành phần:
+
+- **Sign up with Google**: Cho phép người dùng đăng ký bằng tài khoản Google.
+- **Form nhập thông tin**: Gồm 3 trường:
+  - Email
+  - Password (có thể ẩn/hiện mật khẩu)
+  - Username
+- **Nút đăng ký (Login)**: Gửi yêu cầu đăng ký.
+- **Chuyển hướng sang đăng nhập**: Nếu người dùng đã có tài khoản.
+
+---
+
+### 2. Đăng nhập tài khoản
+
+<img src={require('@site/static/img/sign-in.png').default} />
+
+#### Các thành phần:
+
+- **Sign in with Google**: Cho phép đăng nhập bằng tài khoản Google.
+- **Form đăng nhập**:
+  - Email
+  - Password (có thể hiện/ẩn)
+- **Reset your password**: Đường dẫn để lấy lại mật khẩu.
+- **Nút đăng nhập (Login)**: Gửi yêu cầu đăng nhập.
+- **Chuyển hướng sang đăng ký**: Nếu chưa có tài khoản.
+
+---
