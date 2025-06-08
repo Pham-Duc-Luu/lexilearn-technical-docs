@@ -1,0 +1,160 @@
+---
+title: 🗂️ プロジェクト構成 – ディレクトリ構造
+sidebar_position: 3
+---
+
+```
+
+MainBackendService/
+├── BackendApplication.java        // Spring Bootアプリのエントリーポイント
+├── argumentResolver/              // リクエスト用のカスタム引数リゾルバー
+│   └── ...
+├── config/                       // サーバー設定、Bean、Feign、CORSなどの構成
+│   └── ...
+├── controller/                   // REST APIエンドポイント
+│   └── ...
+├── dto/                         // データ転送オブジェクトクラス
+│   └── ...
+├── exception/                   // 例外定義およびエラーハンドリング
+│   └── ...
+├── filter/                      // HTTPフィルター（ログ、JWTなど）
+│   └── ...
+├── GraphqlResolver/             // GraphQLのリゾルバー（クエリ、ミューテーション）
+│   └── ...
+├── interceptors/                // リクエストの前後に実行されるインターセプター
+│   └── ...
+├── Microservice/                // 他サービスへのFeignクライアント
+│   └── ...
+├── modal/                       // ドメインモデルまたはJOOQ生成モデル
+│   └── ...
+├── service/                    // 各モジュールのビジネスロジック
+│   └── ...
+└── utils/                      // 共通ユーティリティ関数
+└── ...
+
+```
+
+---
+
+## 🔹 `BackendApplication.java`
+
+```java title="src/main/java/MainBackendService/BackendApplication.java"
+package MainBackendService;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
+@EnableFeignClients
+public class BackendApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BackendApplication.class, args);
+    }
+}
+
+```
+
+これはアプリケーションのエントリーポイントです。`BackendApplication`クラスは Spring Boot アプリの起動を担当し、Feign Client 機能を有効化し、デフォルトのセキュリティ設定 (`SecurityAutoConfiguration`) を除外しています。
+
+---
+
+## 📁 `MainBackendService` 内のサブディレクトリ
+
+### 🧩 `argumentResolver/`
+
+カスタム引数リゾルバーを格納。コントローラーのリクエストパラメータの処理に使います。
+
+> 例：トークンからユーザーを取得し、コントローラーメソッドに自動注入する。
+
+---
+
+### ⚙️ `config/`
+
+サーバー全体の設定を管理：
+
+- Feign Client 設定
+- CORS 設定
+- Spring Beans 設定
+- `@Configuration`アノテーション付きクラス
+
+---
+
+### 📡 `controller/`
+
+システムの REST API エンドポイントを定義。
+
+> 各コントローラーはアプリのリソースやモジュールに対応。
+
+---
+
+### 📦 `dto/` (データ転送オブジェクト)
+
+クライアントとサーバー間の入出力を定義するクラスを格納。
+
+> 一貫性と保守性を高め、システムのエンティティを直接公開しないため。
+
+---
+
+### 🚨 `exception/`
+
+カスタム例外とエラーハンドリングクラス（例：`@ControllerAdvice`）を定義。
+
+> リクエスト処理中に例外が発生した場合、標準化されたエラーメッセージを返す。
+
+---
+
+### 🚪 `filter/`
+
+HTTP リクエストフィルターを格納。
+
+> 例：JWT 検証、ログ記録、リクエストトレースなど。
+
+---
+
+### 📊 `GraphqlResolver/`
+
+GraphQL のクエリやミューテーションを処理するリゾルバー。
+
+> GraphQL エンドポイントがある場合は全てのクエリロジックがここにある。
+
+---
+
+### 🧭 `interceptors/`
+
+リクエスト処理の前後に動作するインターセプターを格納。
+
+> ログ記録、認証チェック、トレーシングに利用。
+
+---
+
+### 🔌 `Microservice/`
+
+Feign Client を用いて他のマイクロサービスと通信するインターフェースを定義。
+
+> HTTP 経由で他サービスの API を簡単に呼び出せ、型チェックも可能。
+
+---
+
+### 🧱 `modal/`（`model/` が推奨）
+
+アプリのエンティティやドメインデータを表すクラス。
+
+> 命名は`model/`に変更することを検討してください。
+
+---
+
+### 🛠️ `service/`
+
+内部のビジネスロジックを保持。
+
+> 各サービスはドメインやモジュールに対応し、主要な処理ロジックを含む。
+
+---
+
+### 🧰 `utils/`
+
+プロジェクト全体で使う共通ユーティリティクラス。
+
+> 例：文字列処理、日時処理、暗号化など。

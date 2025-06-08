@@ -1,0 +1,230 @@
+---
+sidebar_position: 4
+---
+
+# Cấu trúc dự án Media Distributor
+
+Tài liệu này mô tả cấu trúc thư mục và tổ chức mã nguồn của ứng dụng **Media Distributor**, một ứng dụng Spring Boot được thiết kế để xử lý, vận chuyển và phân phối các tệp media trong hệ thống microservice. Cấu trúc dự án tuân theo các quy ước của Spring Boot và được tổ chức để đảm bảo tính mô-đun, dễ bảo trì và mở rộng.
+
+## Tổng quan cấu trúc thư mục
+
+Dưới đây là cấu trúc thư mục chính của dự án, với các gói/thư mục chính nằm trong `src/main/java/com` (giả sử `com` là `groupId` của dự án):
+
+```
+src
+├── main
+│   ├── java
+│   │   └── com
+│   │       ├── Application.java
+│   │       ├── argumentResolver
+│   │       ├── config
+│   │       ├── controller
+│   │       ├── dto
+│   │       ├── enums
+│   │       ├── exception
+│   │       ├── filter
+│   │       ├── guard
+│   │       ├── interceptors
+│   │       ├── model
+│   │       ├── repository
+│   │       ├── service
+│   │       ├── Strategy
+│   │       └── util
+│   └── resources
+│       ├── application.properties
+│       └── public
+└── test
+    └── java
+        └── com
+```
+
+## Mô tả chi tiết các thành phần
+
+### 1. `Application.java`
+
+- **Vai trò**: Lớp chính của ứng dụng Spring Boot, chứa phương thức `main` để khởi động ứng dụng.
+- **Chức năng**:
+  - Khởi tạo context Spring Boot.
+  - Cấu hình các bean và quét các thành phần trong các gói con.
+- **Vị trí**: Trực tiếp trong gói `com`.
+- **Ví dụ**:
+  ```java
+  @SpringBootApplication
+  public class Application {
+      public static void main(String[] args) {
+          SpringApplication.run(Application.class, args);
+      }
+  }
+  ```
+
+### 2. `argumentResolver`
+
+- **Vai trò**: Chứa các lớp triển khai `HandlerMethodArgumentResolver` để tùy chỉnh cách Spring MVC ánh xạ tham số yêu cầu vào các tham số phương thức trong controller.
+- **Chức năng**:
+  - Xử lý các tham số tùy chỉnh, ví dụ: trích xuất thông tin người dùng từ JWT token.
+- **Ví dụ sử dụng**: Ánh xạ token JWT thành đối tượng `User` trong controller.
+
+### 3. `config`
+
+- **Vai trò**: Chứa các lớp cấu hình Spring (thường được chú thích bằng `@Configuration`).
+- **Chức năng**:
+  - Cấu hình bean, như kết nối AWS S3, MongoDB, Elasticsearch, hoặc Cloudinary.
+  - Thiết lập các cấu hình bảo mật, CORS, hoặc WebClient.
+- **Ví dụ**:
+  - Cấu hình AWS S3 client.
+  - Cấu hình WebClient cho các yêu cầu HTTP bất đồng bộ.
+
+### 4. `controller`
+
+- **Vai trò**: Chứa các lớp điều khiển REST API (chú thích `@RestController`).
+- **Chức năng**:
+  - Xử lý các yêu cầu HTTP (GET, POST, PUT, DELETE) từ client.
+  - Gọi các service để thực hiện logic nghiệp vụ.
+  - Ví dụ: API để tải lên tệp media, tạo URL được ký trước cho S3, hoặc tìm kiếm media.
+- **Ví dụ endpoint**:
+  - `/api/v1/upload`: Tải tệp lên S3.
+  - `/api/v1/search`: Tìm kiếm media trong Elasticsearch.
+
+### 5. `dto`
+
+- **Vai trò**: Chứa các lớp Data Transfer Object (DTO) để truyền dữ liệu giữa các tầng.
+- **Chức năng**:
+  - Định nghĩa cấu trúc dữ liệu cho yêu cầu và phản hồi API.
+  - Giảm sự phụ thuộc trực tiếp vào các lớp model.
+- **Ví dụ**:
+  - `MediaUploadRequestDTO`: Chứa thông tin tệp và metadata.
+  - `MediaResponseDTO`: Chứa URL và thông tin tệp sau khi tải lên.
+
+### 6. `enums`
+
+- **Vai trò**: Chứa các hằng số kiểu liệt kê (`enum`).
+- **Chức năng**:
+  - Định nghĩa các giá trị cố định, như loại tệp media (`MP3`, `JPG`, `MP4`), trạng thái xử lý, hoặc mã lỗi.
+- **Ví dụ**:
+  ```java
+  public enum MediaType {
+      MP3, JPG, MP4
+  }
+  ```
+
+### 7. `exception`
+
+- **Vai trò**: Chứa các lớp ngoại lệ tùy chỉnh và bộ xử lý ngoại lệ (`@ControllerAdvice`).
+- **Chức năng**:
+  - Định nghĩa các ngoại lệ cụ thể, như `MediaUploadException` hoặc `InvalidFileTypeException`.
+  - Xử lý ngoại lệ toàn cục và trả về phản hồi lỗi chuẩn hóa.
+- **Ví dụ**:
+  - `GlobalExceptionHandler`: Xử lý các ngoại lệ và trả về mã trạng thái HTTP phù hợp.
+
+### 8. `filter`
+
+- **Vai trò**: Chứa các bộ lọc Servlet (`@WebFilter`) để xử lý yêu cầu trước khi đến controller.
+- **Chức năng**:
+  - Xác thực token, ghi log yêu cầu, hoặc kiểm tra header.
+- **Ví dụ**:
+  - Bộ lọc kiểm tra API key hoặc JWT token.
+
+### 9. `guard`
+
+- **Vai trò**: Chứa các lớp bảo vệ (guard) để kiểm tra quyền truy cập hoặc điều kiện trước khi thực thi logic.
+- **Chức năng**:
+  - Kiểm tra vai trò người dùng hoặc quyền truy cập tài nguyên.
+- **Ví dụ**:
+  - `AdminGuard`: Chỉ cho phép người dùng có vai trò admin truy cập endpoint.
+
+### 10. `interceptors`
+
+- **Vai trò**: Chứa các lớp triển khai `HandlerInterceptor` để chặn và xử lý yêu cầu HTTP.
+- **Chức năng**:
+  - Ghi log thời gian xử lý yêu cầu.
+  - Thêm header tùy chỉnh vào phản hồi.
+- **Ví dụ**:
+  - `LoggingInterceptor`: Ghi log thời gian thực thi của mỗi yêu cầu.
+
+### 11. `model`
+
+- **Vai trò**: Chứa các lớp thực thể (entity) đại diện cho dữ liệu lưu trữ.
+- **Chức năng**:
+  - Ánh xạ đến các bảng/collection trong cơ sở dữ liệu (MongoDB, PostgreSQL, hoặc MySQL).
+  - Ví dụ: Lớp `Media` chứa thông tin về tệp media (tên, URL, metadata).
+- **Ví dụ**:
+  ```java
+  @Document(collection = "media")
+  public class Media {
+      @Id
+      private String id;
+      private String fileName;
+      private String s3Url;
+      // Getters and setters
+  }
+  ```
+
+### 12. `repository`
+
+- **Vai trò**: Chứa các giao diện repository để tương tác với cơ sở dữ liệu.
+- **Chức năng**:
+  - Sử dụng Spring Data để cung cấp các phương thức CRUD cho MongoDB, Elasticsearch, hoặc JPA.
+- **Ví dụ**:
+  - `MediaRepository` (MongoDB): Truy vấn và lưu trữ thông tin media.
+  - `MediaSearchRepository` (Elasticsearch): Tìm kiếm media theo từ khóa.
+
+### 13. `service`
+
+- **Vai trò**: Chứa các lớp dịch vụ triển khai logic nghiệp vụ.
+- **Chức năng**:
+  - Xử lý các tác vụ như tải lên tệp, tạo URL được ký trước, hoặc phân tích metadata.
+  - Gọi repository và các dịch vụ bên ngoài (S3, Cloudinary).
+- **Ví dụ**:
+  - `MediaService`: Xử lý logic tải lên và lưu trữ tệp media.
+
+### 14. `Strategy`
+
+- **Vai trò**: Chứa các lớp triển khai mẫu thiết kế Strategy để xử lý các hành vi khác nhau.
+- **Chức năng**:
+  - Cho phép chọn chiến lược xử lý tệp dựa trên loại tệp hoặc dịch vụ lưu trữ (S3, Cloudinary).
+- **Ví dụ**:
+  - `S3StorageStrategy`: Tải tệp lên S3.
+  - `CloudinaryStorageStrategy`: Tải tệp lên Cloudinary.
+
+### 15. `util`
+
+- **Vai trò**: Chứa các lớp tiện ích hoặc hàm hỗ trợ.
+- **Chức năng**:
+  - Cung cấp các phương thức chung, như chuyển đổi định dạng, kiểm tra tệp, hoặc xử lý chuỗi.
+- **Ví dụ**:
+  - `FileValidator`: Kiểm tra định dạng và kích thước tệp.
+  - `JwtUtils`: Xử lý mã hóa/giải mã JWT.
+
+### 16. `resources`
+
+- **Vai trò**: Chứa các tệp cấu hình và tài nguyên tĩnh.
+- **Chức năng**:
+  - `application.properties`: Cấu hình ứng dụng (xem tài liệu cấu hình trước đó).
+  - `public/`: Chứa tài nguyên tĩnh như HTML, CSS, JS.
+
+## Quy ước đặt tên và tổ chức
+
+- **Gói con**: Mỗi gói (`controller`, `service`, v.v.) được đặt trong `com` (hoặc `com.yourdomain` nếu `groupId` được tùy chỉnh).
+- **Tên lớp**:
+  - Controller: Kết thúc bằng `Controller` (ví dụ: `MediaController`).
+  - Service: Kết thúc bằng `Service` (ví dụ: `MediaService`).
+  - Repository: Kết thúc bằng `Repository` (ví dụ: `MediaRepository`).
+  - DTO: Kết thúc bằng `DTO` (ví dụ: `MediaResponseDTO`).
+- **Tính mô-đun**: Mỗi gói có trách nhiệm riêng, đảm bảo tính tách biệt (separation of concerns).
+
+## Lợi ích của cấu trúc
+
+- **Dễ bảo trì**: Các thành phần được tổ chức rõ ràng, dễ tìm kiếm và cập nhật.
+- **Mở rộng**: Hỗ trợ thêm các chiến lược lưu trữ hoặc dịch vụ mới mà không làm ảnh hưởng đến mã hiện tại.
+- **Tái sử dụng**: Các lớp trong `util` và `Strategy` có thể được sử dụng lại trong các dự án khác.
+- **Kiểm tra**: Cấu trúc tách biệt giúp dễ dàng viết unit test cho các service và repository.
+
+## Lưu ý
+
+- Đảm bảo các phụ thuộc trong `pom.xml` tương thích với các phiên bản của MongoDB, Elasticsearch, và AWS SDK.
+- Khi thêm gói mới, cập nhật tài liệu này để giữ đồng bộ.
+- Sử dụng `@ComponentScan` trong `Application.java` để đảm bảo Spring quét tất cả các gói con.
+
+## Kết luận
+
+Cấu trúc dự án Media Distributor được thiết kế để tối ưu hóa việc phát triển và bảo trì ứng dụng. Mỗi gói có vai trò rõ ràng, từ xử lý yêu cầu API đến lưu trữ và tìm kiếm media. Tài liệu này cung cấp nền tảng để các nhà phát triển hiểu và làm việc với mã nguồn hiệu quả.

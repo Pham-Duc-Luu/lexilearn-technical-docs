@@ -1,0 +1,22 @@
+---
+title: Authentication Dto
+sidebar_position: 2
+---
+
+Các request liên quan đến người dùng chạy trong system thường sẽ mang theo access_token
+thể hiện việc người dùng đang đăng nhâp vào hệ thống
+Nếu giải mã thì nó sẽ được một dto mang thông tin của người dùng
+
+✅ DTO trong Java (Spring Boot):
+
+```java
+
+public class UserDTO {
+    private String user_email;
+    private String user_name;
+    private String user_id;
+    private String user_uuid;
+    private Long issuedAt;  // iat
+    private Long expiresAt; // exp
+}
+```

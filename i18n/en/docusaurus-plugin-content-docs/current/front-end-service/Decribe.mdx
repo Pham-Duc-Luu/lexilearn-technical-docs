@@ -1,0 +1,412 @@
+---
+sidebar_position: 3
+---
+
+# Cách Hoạt Động của Ứng Dụng Frontend Lexilearn 🚀
+
+Tài liệu này mô tả cách hoạt động của ứng dụng frontend **Lexilearn**, một nền tảng học tập sử dụng flashcard được xây dựng bằng **React** và **Vite**. Ứng dụng sử dụng **React Router** để quản lý định tuyến, **Redux** để quản lý trạng thái, và các nhà cung cấp (providers) để thiết lập các cài đặt toàn cục. 🌟
+
+## Tổng Quan 🌐
+
+Lexilearn là một ứng dụng web frontend được viết bằng **React** với công cụ xây dựng **Vite**, mang lại hiệu suất cao và trải nghiệm phát triển mượt mà. Các thành phần chính bao gồm:
+
+- **Định tuyến**: Sử dụng **React Router** để quản lý các trang và bố cục.
+- **Quản lý trạng thái**: Sử dụng **Redux** với **Redux Toolkit** để quản lý trạng thái toàn cục.
+- **API Call**: Tích hợp với các API backend thông qua các service được định nghĩa.
+- **Providers**: Cung cấp các cài đặt toàn cục như Redux, Apollo Client, Google OAuth, và giao diện người dùng (UI).
+
+Ứng dụng hỗ trợ các tính năng như đăng nhập/đăng ký, quản lý flashcard, ôn tập, và chỉnh sửa bộ từ vựng (desk), với giao diện thân thiện và hiệu suất tối ưu. 🛠️
+
+## Cấu Trúc và Cách Hoạt Động 📂
+
+### 1. Điểm Bắt Đầu: `index.html` 📄
+
+File `index.html` tại thư mục gốc là điểm khởi đầu của ứng dụng:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link href="/src/assets/icon.svg" rel="icon" type="image/svg+xml" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Lexilearn</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="/src/main.tsx" type="module"></script>
+  </body>
+</html>
+```
+
+- **Chức năng**:
+  - Tạo một `div` với `id="root"` làm nơi gắn kết ứng dụng React.
+  - Tải file `main.tsx` để khởi tạo ứng dụng.
+  - Thiết lập các meta tag cơ bản và favicon.
+
+### 2. Định Tuyến với React Router 🛤️
+
+File `src/main.tsx` định nghĩa các tuyến đường (routes) và bố cục (layouts) của ứng dụng bằng **React Router**:
+
+```tsx
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Route, Routes } from 'react-router';
+import './i18n/config.ts';
+import AuthPage from '@/pages/auth/index.tsx';
+import './globals.css';
+import MainLayout from './layout.tsx';
+import AuthLayout from './pages/auth/layout.tsx';
+import EditDeskVocabLayout from './pages/desk/edit-flashcard/layout.tsx';
+import EditDeskVocalPage from './pages/desk/edit-flashcard/page.tsx';
+import DeskPage from './pages/home/desk/[deskId]/page.tsx';
+import HomePage from './pages/home/HomePage.tsx';
+import HomeLayout from './pages/home/layout.tsx';
+import LibraryStatusLayout from './pages/home/library/[status]/layout.tsx';
+import LibraryLayout from './pages/home/library/layout.tsx';
+import ProfilePage from './pages/home/profile/page.tsx';
+import {
+  ComponentsUrl,
+  PlayGroundLayout,
+} from './pages/play-ground/layout.tsx';
+import ReviewFlashcardLayout from './pages/review/flashcard/layout.tsx';
+import ReviewFlashcard from './pages/review/flashcard/page.tsx';
+import { routeProto } from './redux/store/route.slice.ts';
+
+const root = document.getElementById('root');
+
+createRoot(root!).render(
+  <StrictMode>
+    <BrowserRouter>
+      <Routes>
+        <Route path="" ahead-of-timeCompileelement={<MainLayout></MainLayout>}>
+          <Route
+            path="auth"
+            element={
+              <AuthLayout>
+                <AuthPage></AuthPage>
+              </AuthLayout>
+            }
+          />
+          <Route path="home" element={<HomeLayout></HomeLayout>}>
+            <Route index element={<HomePage></HomePage>}></Route>
+            <Route path="library" element={<LibraryLayout></LibraryLayout>}>
+              <Route
+                path=":status/:page"
+                element={<LibraryStatusLayout></LibraryStatusLayout>}></Route>
+            </Route>
+            <Route path="desk">
+              <Route path=":deskId" element={<DeskPage></DeskPage>}></Route>
+            </Route>
+            <Route path="profile" element={<ProfilePage></ProfilePage>}></Route>
+          </Route>
+          <Route
+            path="edit-desk/:deskId"
+            element={<EditDeskVocabLayout></EditDeskVocabLayout>}>
+            <Route
+              index
+              element={<EditDeskVocalPage></EditDeskVocalPage>}></Route>
+          </Route>
+          <Route
+            path={routeProto.REVIEW_DESK_FLASHCARD()}
+            element={<ReviewFlashcardLayout></ReviewFlashcardLayout>}>
+            <Route index element={<ReviewFlashcard></ReviewFlashcard>}></Route>
+          </Route>
+          <Route
+            path="components/"
+            element={<PlayGroundLayout></PlayGroundLayout>}>
+            {ComponentsUrl.map((item, index) => (
+              <Route
+                key={index}
+                path={item.url}
+                element={item.component}></Route>
+            ))}
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  </StrictMode>
+);
+```
+
+- **Cấu trúc định tuyến**:
+  - **MainLayout**: Bố cục chính, bao bọc tất cả các tuyến đường.
+  - Các tuyến chính:
+    - `/auth`: Trang đăng nhập/đăng ký (`AuthLayout`, `AuthPage`).
+    - `/home`: Trang chủ, bao gồm:
+      - `/home` (index): Trang chính (`HomePage`).
+      - `/home/library/:status/:page`: Thư viện flashcard theo trạng thái (`LibraryStatusLayout`).
+      - `/home/desk/:deskId`: Chi tiết bộ từ vựng (`DeskPage`).
+      - `/home/profile`: Hồ sơ người dùng (`ProfilePage`).
+    - `/edit-desk/:deskId`: Chỉnh sửa bộ từ vựng (`EditDeskVocabLayout`, `EditDeskVocalPage`).
+    - `/review/desk/flashcard`: Ôn tập flashcard (`ReviewFlashcardLayout`, `ReviewFlashcard`).
+    - `/components/*`: Các thành phần thử nghiệm (`PlayGroundLayout`).
+
+### 3. Bố Cục Chính: `MainLayout` 🏗️
+
+File `src/layout.tsx` định nghĩa `MainLayout`, đóng vai trò là bố cục gốc cho toàn bộ ứng dụng:
+
+```tsx
+import { Outlet } from 'react-router';
+import { SettingBox } from './components/SettingBox';
+import { Providers } from './Providers';
+
+export default function MainLayout() {
+  return (
+    <>
+      <Providers>
+        <div className="relative">
+          <Outlet></Outlet>
+          <SettingBox></SettingBox>
+        </div>
+      </Providers>
+    </>
+  );
+}
+```
+
+- **Chức năng**:
+  - **Providers**: Cung cấp các cài đặt toàn cục (Redux, Apollo Client, Google OAuth, v.v.).
+  - **Outlet**: Vị trí nơi các thành phần con (các trang) được render theo tuyến đường.
+  - **SettingBox**: Thành phần giao diện cho các cài đặt (ví dụ: ngôn ngữ, chủ đề).
+
+### 4. Providers: Cài Đặt Toàn Cục ⚙️
+
+File `src/Providers.tsx` định nghĩa các nhà cung cấp để thiết lập môi trường toàn cục:
+
+```tsx
+import createApolloClient from '@/api/apolloClient';
+import MouseContextProvider from '@/context/mouse-context';
+import { ApolloProvider } from '@apollo/client';
+import { HeroUIProvider } from '@heroui/react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { HelmetProvider } from 'react-helmet-async';
+import { Provider } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+import { PersistGate } from 'redux-persist/integration/react';
+import AuthProvider from './provider/auth.provider';
+import {
+  persistor,
+  ProtoStore,
+  useAppSelector,
+} from './redux/store/ProtoStore.slice';
+
+export function ApolloCustomeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { auth } = useAppSelector((state) => state.persistedReducer);
+  return (
+    <ApolloProvider client={createApolloClient({ token: auth.access_token })}>
+      <PersistGate loading={null} persistor={persistor}>
+        <Provider store={ProtoStore}>{children}</Provider>
+      </PersistGate>
+    </ApolloProvider>
+  );
+}
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <HelmetProvider>
+      <HeroUIProvider>
+        <ToastContainer autoClose={3000}></ToastContainer>
+        <PersistGate loading={null} persistor={persistor}>
+          <Provider store={ProtoStore}>
+            <MouseContextProvider>
+              <GoogleOAuthProvider
+                clientId={`${import.meta.env.VITE_PUBLIC_AUTH_GOOGLE_ID}`}>
+                <AuthProvider>{children}</AuthProvider>
+              </GoogleOAuthProvider>
+            </MouseContextProvider>
+          </Provider>
+        </PersistGate>
+      </HeroUIProvider>
+    </HelmetProvider>
+  );
+}
+```
+
+- **Các Providers chính**:
+  - **HelmetProvider**: Quản lý thẻ `<head>` (SEO, metadata).
+  - **HeroUIProvider**: Cung cấp giao diện người dùng từ thư viện `@heroui/react`.
+  - **ToastContainer**: Hiển thị thông báo (toast) với thời gian tự động đóng sau 3 giây.
+  - **PersistGate**: Hỗ trợ lưu trữ trạng thái Redux với `redux-persist`.
+  - **Provider**: Kết nối ứng dụng với Redux store (`ProtoStore`).
+  - **MouseContextProvider**: Quản lý ngữ cảnh chuột (mouse context).
+  - **GoogleOAuthProvider**: Hỗ trợ đăng nhập bằng Google OAuth.
+  - **AuthProvider**: Quản lý xác thực người dùng.
+  - **ApolloProvider** (trong `ApolloCustomeProvider`): Cung cấp client Apollo để gọi API GraphQL, sử dụng `access_token` từ Redux store.
+
+### 5. Quản Lý Trạng Thái với Redux 🗃️
+
+Ứng dụng sử dụng **Redux** với **Redux Toolkit** để quản lý trạng thái toàn cục. Redux là nền tảng cho toàn bộ logic của ứng dụng, dựa trên các khái niệm cốt lõi: **actions**, **reducer**, và **dispatch**. (Xem chi tiết tại [Redux Documentation](https://redux.js.org/)).
+
+File `src/redux/store/ProtoStore.slice.ts` định nghĩa Redux store:
+
+```tsx
+import { userGQLApi } from '@/api/user service/graphql/user.graphql.api';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import {
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+} from 'redux-persist';
+import localStorage from 'redux-persist/lib/storage';
+import AuthProtoReducer from './Auth.proto.slice';
+import CardNodeProtoReducer from './CardNode.proto.slice';
+import DeskProtoReducer from './Desk.proto.slice';
+import EditDeskReducer from './editDesk.slice';
+import HomepgeProtoReducer from './HomePage.proto.slice';
+import LibraryProtoReducer from './LibraryStore.slice';
+import NewDeskProtoReducer from './newDesk.slice';
+import ReviewFlashcardReducer from './ReviewFlashcard.slice';
+import { generatorApi } from '@/api/generator service/audio-generator.service';
+import { userImageApi } from '@/api/image service/user-image.api';
+import { searchPhotoApi } from '@/api/search/search.photo.api';
+import { deskApi, userApi } from '@/api/user service';
+import { authApi } from '@/api/user service/authentication.api';
+import { flashcardApi } from '@/api/user service/flashcard.api';
+import { useDispatch, useSelector } from 'react-redux';
+import { persistReducer } from 'redux-persist';
+
+const rootReducer = combineReducers({
+  auth: AuthProtoReducer,
+  CardNode: CardNodeProtoReducer,
+  HomePage: HomepgeProtoReducer,
+  NewDesk: NewDeskProtoReducer,
+  ReviewFlashCard: ReviewFlashcardReducer,
+  LibraryPage: LibraryProtoReducer,
+  DeskPage: DeskProtoReducer,
+  EditDeskPage: EditDeskReducer,
+});
+
+const persistConfig = {
+  key: 'root',
+  whitelist: ['auth'],
+  storage: localStorage,
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const ProtoStore = configureStore({
+  reducer: {
+    persistedReducer,
+    [authApi.reducerPath]: authApi.reducer,
+    [userApi.reducerPath]: userApi.reducer,
+    [userGQLApi.reducerPath]: userGQLApi.reducer,
+    [searchPhotoApi.reducerPath]: searchPhotoApi.reducer,
+    [userImageApi.reducerPath]: userImageApi.reducer,
+    [deskApi.reducerPath]: deskApi.reducer,
+    [flashcardApi.reducerPath]: flashcardApi.reducer,
+    [generatorApi.reducerPath]: generatorApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(
+      authApi.middleware,
+      userApi.middleware,
+      userGQLApi.middleware,
+      searchPhotoApi.middleware,
+      userImageApi.middleware,
+      deskApi.middleware,
+      flashcardApi.middleware,
+      generatorApi.middleware
+    ),
+});
+
+setupListeners(ProtoStore.dispatch);
+
+export type RootState = ReturnType<typeof ProtoStore.getState>;
+export type AppDispatch = typeof ProtoStore.dispatch;
+export type AppStore = typeof ProtoStore;
+
+export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
+export const useAppSelector = useSelector.withTypes<RootState>();
+
+export const persistor = persistStore(ProtoStore);
+```
+
+- **Chức năng**:
+  - **combineReducers**: Kết hợp các reducer cho các tính năng khác nhau (xác thực, flashcard, thư viện, v.v.).
+  - **persistReducer**: Lưu trữ trạng thái `auth` vào `localStorage` để duy trì trạng thái xác thực sau khi tải lại trang.
+  - **configureStore**: Tạo Redux store với các reducer và middleware (bao gồm middleware cho API calls).
+  - **Middleware**: Hỗ trợ các API call bất đồng bộ với Redux Toolkit Query.
+  - **setupListeners**: Kích hoạt các tính năng như refetching dữ liệu tự động.
+- **Các Reducer**:
+  - `AuthProtoReducer`: Quản lý trạng thái xác thực (access token, thông tin người dùng).
+  - `CardNodeProtoReducer`: Quản lý dữ liệu flashcard.
+  - `HomepgeProtoReducer`, `LibraryProtoReducer`, `DeskProtoReducer`, v.v.: Quản lý trạng thái cho các trang cụ thể.
+- **Sử dụng**:
+  - Các thành phần sử dụng `useAppSelector` để truy xuất trạng thái và `useAppDispatch` để gửi actions.
+
+### 6. API Calls 📡
+
+Ứng dụng tích hợp với backend thông qua các API được định nghĩa trong thư mục `src/api`. Các API chính bao gồm:
+
+- **authApi**: Xử lý xác thực (đăng nhập, đăng ký, làm mới token).
+- **userApi**, **userGQLApi**: Quản lý thông tin người dùng (GraphQL và REST).
+- **deskApi**, **flashcardApi**: Quản lý bộ từ vựng và flashcard.
+- **generatorApi**: Tạo âm thanh cho flashcard.
+- **searchPhotoApi**, **userImageApi**: Tìm kiếm và quản lý hình ảnh.
+
+- **Cơ chế**:
+  - Sử dụng **Apollo Client** (`createApolloClient`) để gọi API GraphQL, với `access_token` từ Redux store để xác thực.
+  - Các API sử dụng **Redux Toolkit Query** để quản lý truy vấn và bộ đệm (caching).
+  - Middleware của các API được tích hợp vào Redux store để xử lý các yêu cầu bất đồng bộ.
+
+### 7. Các Tính Năng Chính của Ứng Dụng 🎯
+
+- **Đăng Nhập/Đăng Ký**: Trang `/auth` hỗ trợ đăng nhập bằng Google OAuth hoặc thông tin đăng nhập thông thường.
+- **Trang Chủ**: Trang `/home` hiển thị danh sách bộ từ vựng và các tùy chọn điều hướng.
+- **Thư Viện**: Trang `/home/library/:status/:page` cho phép lọc flashcard theo trạng thái (ví dụ: đang học, đã hoàn thành).
+- **Bộ Từ Vựng**: Trang `/home/desk/:deskId` hiển thị chi tiết một bộ từ vựng.
+- **Chỉnh Sửa Bộ Từ Vựng**: Trang `/edit-desk/:deskId` cho phép chỉnh sửa flashcard.
+- **Ôn Tập Flashcard**: Trang `/review/desk/flashcard` hỗ trợ ôn tập flashcard với thuật toán lặp lại ngắt quãng (SM-2).
+- **Hồ Sơ Người Dùng**: Trang `/home/profile` hiển thị thông tin cá nhân.
+- **Playground**: Trang `/components/*` để thử nghiệm các thành phần giao diện.
+
+### 8. Các Thành Phần Hỗ Trợ 🧩
+
+- **i18n**: Hỗ trợ đa ngôn ngữ (khởi tạo trong `src/i18n/config.ts`).
+- **CSS Toàn Cục**: File `globals.css` định nghĩa các kiểu dáng chung.
+- **Toast Notifications**: Sử dụng `react-toastify` để hiển thị thông báo.
+- **SEO**: Sử dụng `react-helmet-async` để quản lý metadata.
+
+## Quy Trình Hoạt Động ⚙️
+
+1. **Khởi tạo**:
+
+   - Trình duyệt tải `index.html`, khởi chạy `main.tsx`.
+   - Redux store được tạo với các reducer và middleware.
+   - Các provider được thiết lập trong `MainLayout`.
+
+2. **Điều Hướng**:
+
+   - Người dùng truy cập một tuyến đường (ví dụ: `/home`).
+   - React Router render bố cục và trang tương ứng (ví dụ: `HomeLayout` và `HomePage`).
+
+3. **Quản Lý Trạng Thái**:
+
+   - Thành phần sử dụng `useAppSelector` để lấy trạng thái từ Redux store.
+   - Các hành động (actions) được gửi qua `useAppDispatch` để cập nhật trạng thái.
+
+4. **Gọi API**:
+
+   - Thành phần gửi yêu cầu API qua Apollo Client hoặc Redux Toolkit Query.
+   - Dữ liệu được lưu vào Redux store hoặc bộ đệm API.
+
+5. **Render Giao Diện**:
+   - Dữ liệu từ Redux store được sử dụng để render giao diện.
+   - Các thông báo hoặc lỗi được hiển thị qua `ToastContainer`.
+
+## Kết Luận 🎉
+
+Ứng dụng Lexilearn là một hệ thống frontend mạnh mẽ, được xây dựng với **React**, **Vite**, **Redux**, và **React Router**. Với cấu trúc rõ ràng, quản lý trạng thái tập trung, và tích hợp API hiệu quả, ứng dụng cung cấp trải nghiệm học tập mượt mà và cá nhân hóa. Các provider đảm bảo cài đặt toàn cục, trong khi Redux và API calls hỗ trợ logic cốt lõi, giúp Lexilearn trở thành một công cụ học tập trực quan và hiệu quả. 🌟

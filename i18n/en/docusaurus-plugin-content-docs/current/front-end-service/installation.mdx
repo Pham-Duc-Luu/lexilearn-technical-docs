@@ -1,0 +1,73 @@
+---
+title: Cài đặt
+sidebar_position: 2
+---
+
+## Requirements
+
+Node.js phiên bản 18.0 trở lên (có thể kiểm tra bằng cách chạy node -v). Bạn có thể sử dụng
+nvm để quản lý nhiều phiên bản Node trên một máy được cài đặt.
+
+## 🚀 Cài đặt dự án Frontend
+
+Sau khi đã cài đặt Git, bạn có thể clone mã nguồn frontend của dự án bằng lệnh sau:
+
+```bash
+git clone https://github.com/Pham-Duc-Luu/Lexilearn-front-end-v2.git
+```
+
+Sau khi đã cài đặt xong rồi thì bạn sẽ cài các dependencies của dự án
+
+```bash
+cd ./Lexilearn-front-end-v2
+```
+
+```bash
+npm install --force
+```
+
+```bash
+📦 Lexilearn-front-end-v2
+├── 📄 .env # Biến môi trường
+|
+├── 📄 index.html # File HTML chính (Vite)
+|
+├── 📁 node_modules/ # Thư viện đã cài
+├── 📄 package.json # Metadata & script
+├── 📄 package-lock.json # Khóa phiên bản dependencies
+├── 📄 postcss.config.js # Cấu hình PostCSS
+├── 📁 public/ # Tệp tĩnh (favicon, ảnh...)
+├── 📄 README.md # Mô tả dự án
+├── 📁 src/ # Mã nguồn chính (React + TS)
+  ├── 📁 components/ # Các component tái sử dụng
+  ├── 📁 pages/ # Trang chính của app
+  ├── 📁 store/ # Quản lý trạng thái (nếu có)
+  ├── 📁 assets/ # Ảnh, âm thanh, font...
+  └── 📄 main.tsx # Điểm bắt đầu React
+├── 📄 tailwind.config.js # Cấu hình Tailwind
+├── 📄 tsconfig.json # Cấu hình TypeScript chung
+├── 📄 tsconfig.app.json # TS config cho App
+├── 📄 tsconfig.node.json # TS config cho Node env
+├── 📄 vite.config.ts # Cấu hình Vite
+├── 📄 eslint.config.js # Cấu hình ESLint
+```
+
+## Core của dự án
+
+### 🎨 UI library
+
+Dự án sử dụng các thư viện sau để xây dựng giao diện người dùng:
+
+- **[NextUI](https://nextui.org/):** Thư viện component React hiện đại, thiết kế đẹp, hỗ trợ sẵn dark mode và dễ dàng tuỳ chỉnh.
+- **[shadcn/ui](https://ui.shadcn.com/):** Bộ UI component mã nguồn mở kết hợp Tailwind CSS với Radix UI, linh hoạt và dễ mở rộng.
+- **[Framer Motion](https://www.framer.com/motion/):** Thư viện animation mạnh mẽ dành cho React, giúp tạo hiệu ứng chuyển động mượt mà và tinh tế.
+
+### 🧠 State Manager
+
+Dự án sử dụng **[Redux Toolkit](https://redux-toolkit.js.org/)** làm thư viện chính để quản lý state trong toàn bộ ứng dụng.
+
+Redux Toolkit giúp đơn giản hoá quy trình tạo store, reducer, action và async logic (thông qua `createAsyncThunk`), đồng thời mang lại kiến trúc rõ ràng, dễ bảo trì.
+
+> 💡 Để tiện cho việc debug và phát triển, bạn nên cài **Redux DevTools Extension** trong trình duyệt:
+>
+> 🔗 [Redux DevTools for Chrome](https://chrome.google.com/webstore/detail/redux-devtools/lmhkpmbekcpmknklioeibfkpmmfibljd)

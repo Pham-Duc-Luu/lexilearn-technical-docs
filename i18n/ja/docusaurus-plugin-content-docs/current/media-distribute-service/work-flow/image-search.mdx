@@ -1,0 +1,313 @@
+---
+sidebar_position: 1
+title: Search image
+tags:
+    - developing
+    - workflow
+---
+
+viết docs trong file .mdx
+
+# Kết hợp searching từ nhiều Third-party api (Developing)
+
+Trong quán trình phá triển, việc phát triển search image engine là cần thiết nhung lại vô cùng khó khăn,
+vậy nên chúng ta sẽ sử dụng các third-party api cho việc search và lưu results để nâng cấp search engine của hệ thống
+
+---
+
+
+# Các third-party API đang được sử dụng
+
+## 1. Google Custom Search JSON API
+
+[🔗 Xem overview](https://developers.google.com/custom-search/v1/overview?hl=vi)
+
+Google Custom Search là dịch vụ tìm kiếm tùy chỉnh mạnh mẽ do Google cung cấp, cho phép truy vấn kết quả tìm kiếm web hoặc hình ảnh thông qua REST API.
+
+### 📍 Endpoint REST API
+
+```
+https://www.googleapis.com/customsearch/v1?[parameters]
+```
+
+### 🔑 Tham số bắt buộc
+
+Mỗi request tìm kiếm cần có **3 tham số chính**:
+
+| Tham số | Ý nghĩa |
+|--------|--------|
+| `key` | API Key định danh ứng dụng của bạn |
+| `cx`  | Mã của Custom Search Engine (được tạo từ Google Console) |
+| `q`   | Cụm từ tìm kiếm (search query) |
+
+Ví dụ `cx`: `8ac1ab64606d234f1`
+
+### 📤 Ví dụ request
+
+```bash
+GET https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=YOUR_CX_ID&q=cat+images
+```
+
+---
+
+### 📥 Phản hồi (Response)
+
+Nếu thành công, API sẽ trả về mã trạng thái:
+
+```
+HTTP 200 OK
+```
+
+Kèm theo nội dung dữ liệu ở định dạng **JSON**.
+
+Dữ liệu phản hồi bao gồm 3 nhóm chính:
+
+1. **Metadata tìm kiếm** – mô tả thông tin về truy vấn và kết quả
+2. **Metadata engine** – mô tả công cụ tìm kiếm được dùng
+3. **Danh sách kết quả** – mảng các kết quả phù hợp với truy vấn
+
+---
+
+### 📦 Cấu trúc response mẫu (image search)
+
+Dưới đây là ví dụ rút gọn của một response JSON khi tìm kiếm ảnh với từ khóa `"猫"`:
+
+```javascript
+const requestOptions = {
+  method: "GET",
+  redirect: "follow"
+};
+
+fetch("https://www.googleapis.com/customsearch/v1?key={{API_KEY}}&cx=64dac4582c74b4a77&q=猫&searchType=image", requestOptions)
+  .then((response) => response.text())
+  .then((result) => console.log(result))
+  .catch((error) => console.error(error));
+```
+
+```json
+{
+  "kind": "customsearch#search",
+  "queries": {
+    "request": [
+      {
+        "searchTerms": "猫",
+        "count": 10,
+        "startIndex": 1,
+        "cx": "YOUR_CX_ID",
+        "searchType": "image"
+      }
+    ]
+  },
+  "searchInformation": {
+    "searchTime": 0.35,
+    "totalResults": "13140000000"
+  },
+  "items": [
+    {
+      "title": "猫 - Wikipedia",
+      "link": "https://upload.wikimedia.org/wikipedia/commons/7/74/Cat_August_2010-3.jpg",
+      "displayLink": "zh.wikipedia.org",
+      "snippet": "猫- 维基百科，自由的百科全书",
+      "mime": "image/jpeg",
+      "image": {
+        "contextLink": "https://zh.wikipedia.org/wiki/猫",
+        "height": 1690,
+        "width": 2776,
+        "byteSize": 3119885,
+        "thumbnailLink": "https://encrypted-tbn0.gstatic.com/images?q=...&s",
+        "thumbnailHeight": 91,
+        "thumbnailWidth": 150
+      }
+    }
+
+  ]
+}
+```
+
+### 📚 Tài liệu chi tiết
+
+Để hiểu rõ hơn về cấu trúc phản hồi, tham khảo tài liệu chính thức tại:
+👉 [Google Custom Search API Reference](https://developers.google.com/custom-search/v1/reference/rest)
+
+
+
+### ✅ Lưu ý khi dùng
+
+- Custom Search JSON API provides 100 search queries per day for free. If you need more, you may sign up for billing in the API Console. Additional requests cost $5 per 1000 queries, up to 10k queries per day.
+
+---
+
+
+## 2. 📸 Sử dụng Unsplash API để tìm kiếm hình ảnh (Developing)
+
+Ngoài Google Custom Search, một lựa chọn nhẹ hơn và chuyên biệt cho ảnh là **[Unsplash API](https://unsplash.com/documentation)** – cung cấp kho ảnh chất lượng cao miễn phí với công cụ tìm kiếm mạnh mẽ.
+
+---
+
+### 🚀 Endpoint chính
+
+```http
+GET https://api.unsplash.com/search/photos
+```
+
+---
+
+### 🧾 Các query parameters phổ biến
+
+| Tham số | Ý nghĩa |
+|---------|--------|
+| `query` | Từ khóa tìm kiếm |
+| `page` | Trang số (bắt đầu từ 1) |
+| `per_page` | Số lượng ảnh mỗi trang (mặc định: 10, tối đa: 30) |
+| `orientation` | Hướng ảnh (`landscape`, `portrait`, `squarish`) |
+| `client_id` | Access key của ứng dụng (bắt buộc) |
+
+---
+
+### 📥 Ví dụ curl
+
+```bash
+curl "https://api.unsplash.com/search/photos/?client_id={{UPSPLASH_ACCESS_KEY}}&query=猫"
+```
+
+---
+
+### 📦 Response mẫu (rút gọn)
+
+```json
+{
+    "total": 321,
+    "total_pages": 33,
+    "results": [
+        {
+            "id": "Zi-GhrfKblE",
+            "slug": "brown-lion-lying-on-rock-Zi-GhrfKblE",
+            "alternative_slugs": {
+                "en": "brown-lion-lying-on-rock-Zi-GhrfKblE",
+                "es": "leon-marron-acostado-en-la-roca-Zi-GhrfKblE",
+                "ja": "岩の上に横たわる茶色のライオン-Zi-GhrfKblE",
+                "fr": "lion-brun-couche-sur-un-rocher-Zi-GhrfKblE",
+                "it": "leone-marrone-sdraiato-sulla-roccia-Zi-GhrfKblE",
+                "ko": "바위에-누워-갈색-사자-Zi-GhrfKblE",
+                "de": "brauner-lowe-liegt-auf-felsen-Zi-GhrfKblE",
+                "pt": "leao-marrom-deitado-na-rocha-Zi-GhrfKblE"
+            },
+            "created_at": "2021-02-14T09:19:52Z",
+            "updated_at": "2025-05-10T01:19:27Z",
+            "promoted_at": null,
+            "width": 9504,
+            "height": 6336,
+            "color": "#737359",
+            "blur_hash": "LHF~21-o~WE2^+Io%LE2ElE2%1oy",
+            "description": "猫",
+            "alt_description": "brown lion lying on rock",
+            "breadcrumbs": [],
+            "urls": {
+                "raw": "https://images.unsplash.com/photo-1613294314082-2f3513c8e1be?ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA&ixlib=rb-4.1.0",
+                "full": "https://images.unsplash.com/photo-1613294314082-2f3513c8e1be?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA&ixlib=rb-4.1.0&q=85",
+                "regular": "https://images.unsplash.com/photo-1613294314082-2f3513c8e1be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+                "small": "https://images.unsplash.com/photo-1613294314082-2f3513c8e1be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA&ixlib=rb-4.1.0&q=80&w=400",
+                "thumb": "https://images.unsplash.com/photo-1613294314082-2f3513c8e1be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA&ixlib=rb-4.1.0&q=80&w=200",
+                "small_s3": "https://s3.us-west-2.amazonaws.com/images.unsplash.com/small/photo-1613294314082-2f3513c8e1be"
+            },
+            "links": {
+                "self": "https://api.unsplash.com/photos/brown-lion-lying-on-rock-Zi-GhrfKblE",
+                "html": "https://unsplash.com/photos/brown-lion-lying-on-rock-Zi-GhrfKblE",
+                "download": "https://unsplash.com/photos/Zi-GhrfKblE/download?ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA",
+                "download_location": "https://api.unsplash.com/photos/Zi-GhrfKblE/download?ixid=M3w3MDk2ODd8MHwxfHNlYXJjaHwxfHwlRTclOEMlQUJ8ZW58MHx8fHwxNzQ2ODUwNDkxfDA"
+            },
+            "likes": 12,
+            "liked_by_user": false,
+            "current_user_collections": [],
+            "sponsorship": null,
+            "topic_submissions": {},
+            "asset_type": "photo",
+            "user": {
+                "id": "PSRxw8jFgWo",
+                "updated_at": "2025-03-02T21:35:01Z",
+                "username": "zhangkaiyv",
+                "name": "zhang kaiyv",
+                "first_name": "zhang",
+                "last_name": "kaiyv",
+                "twitter_username": "zhangkaiyv",
+                "portfolio_url": null,
+                "bio": "微信zhangkaiyv1993，抖音2241103390（会发布短视频，希望多多支持点赞关注）\r\n图片如果商用请联系我！！！",
+                "location": "beijing",
+                "links": {
+                    "self": "https://api.unsplash.com/users/zhangkaiyv",
+                    "html": "https://unsplash.com/@zhangkaiyv",
+                    "photos": "https://api.unsplash.com/users/zhangkaiyv/photos",
+                    "likes": "https://api.unsplash.com/users/zhangkaiyv/likes",
+                    "portfolio": "https://api.unsplash.com/users/zhangkaiyv/portfolio",
+                    "following": "https://api.unsplash.com/users/zhangkaiyv/following",
+                    "followers": "https://api.unsplash.com/users/zhangkaiyv/followers"
+                },
+                "profile_image": {
+                    "small": "https://images.unsplash.com/profile-1680323081749-eb38590d71f0?ixlib=rb-4.0.3&crop=faces&fit=crop&w=32&h=32",
+                    "medium": "https://images.unsplash.com/profile-1680323081749-eb38590d71f0?ixlib=rb-4.0.3&crop=faces&fit=crop&w=64&h=64",
+                    "large": "https://images.unsplash.com/profile-1680323081749-eb38590d71f0?ixlib=rb-4.0.3&crop=faces&fit=crop&w=128&h=128"
+                },
+                "instagram_username": "zhangkaiyv",
+                "total_collections": 0,
+                "total_likes": 94,
+                "total_photos": 1062,
+                "total_promoted_photos": 141,
+                "total_illustrations": 0,
+                "total_promoted_illustrations": 0,
+                "accepted_tos": true,
+                "for_hire": true,
+                "social": {
+                    "instagram_username": "zhangkaiyv",
+                    "portfolio_url": null,
+                    "twitter_username": "zhangkaiyv",
+                    "paypal_email": null
+                }
+            }
+        }
+  ]
+}
+```
+
+---
+
+### 📦 Trường quan trọng trong `results[]`
+
+| Trường | Ý nghĩa |
+|--------|--------|
+| `id` | ID duy nhất của ảnh |
+| `slug` | Chuỗi định danh có thể dùng cho URL thân thiện |
+| `description` | Mô tả do người upload cung cấp (có thể là `null`) |
+| `alt_description` | Mô tả thay thế để hiển thị nếu không có ảnh |
+| `urls.raw` | Ảnh gốc chất lượng cao, chưa qua xử lý |
+| `urls.full` | Ảnh đầy đủ, chất lượng cao (có crop) |
+| `urls.regular` | Ảnh chất lượng tốt (1080w) phù hợp để hiển thị mặc định |
+| `urls.small` | Ảnh nhỏ (400w), phù hợp với card nhỏ |
+| `urls.thumb` | Ảnh thumbnail (200w), dùng trong preview hoặc danh sách |
+| `user.name` | Tên người chụp ảnh |
+| `user.links.html` | Link tới trang cá nhân của tác giả |
+| `likes` | Số lượt thích |
+| `created_at` | Ngày đăng ảnh |
+| `links.download` | Link tải ảnh theo điều kiện attribution |
+| `color` | Màu chủ đạo của ảnh (hex code, có thể dùng để làm nền) |
+
+
+### ✅ Lưu ý khi dùng
+
+- **Bắt buộc phải có `client_id`** (Access Key). Đăng ký ở [developer portal](https://unsplash.com/developers).
+- Tuân thủ [guidelines về attribution](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines), ví dụ ghi rõ tên tác giả nếu hiển thị ảnh.
+- Unsplash giới hạn khoảng **50 requests/giờ** ở free tier.
+
+---
+
+
+## 3.Tổng quan search image api
+
+import {ImageWorkFlow} from "@site/src/components/docs/image-search.tsx";
+
+<ImageWorkFlow />
+
+
+
+
+ý tưởng của search image api là tận dụng các Third-party API có sẵn, người dùng sẽ search trực tiếp từ nhưng api này,
+những kết quả sẽ được lưu lại trong elasticsearch, khi nào dữ liệu đủ nhiều và lớn thì sẽ chuyển sang dùng API của ứng dụng cung cấp.

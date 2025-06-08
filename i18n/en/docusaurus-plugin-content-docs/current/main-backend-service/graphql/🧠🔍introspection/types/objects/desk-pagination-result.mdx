@@ -1,0 +1,81 @@
+---
+id: desk-pagination-result
+title: DeskPaginationResult
+---
+
+
+
+
+export const Bullet = () => <><span style={{ fontWeight: 'normal', fontSize: '.5em', color: 'var(--ifm-color-secondary-darkest)' }}>&nbsp;●&nbsp;</span></>
+
+export const SpecifiedBy = (props) => <>Specification<a className="link" style={{ fontSize:'1.5em', paddingLeft:'4px' }} target="_blank" href={props.url} title={'Specified by ' + props.url}>⎘</a></>
+
+export const Badge = (props) => <><span className={props.class}>{props.text}</span></>
+
+import { useState } from 'react';
+
+export const Details = ({ dataOpen, dataClose, children, startOpen = false }) => {
+  const [open, setOpen] = useState(startOpen);
+  return (
+    <details {...(open ? { open: true } : {})} className="details" style={{ border:'none', boxShadow:'none', background:'var(--ifm-background-color)' }}>
+      <summary
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen((open) => !open);
+        }}
+        style={{ listStyle:'none' }}
+      >
+      {open ? dataOpen : dataClose}
+      </summary>
+      {open && children}
+    </details>
+  );
+};
+
+
+
+
+
+
+
+
+No description
+
+
+```graphql
+type DeskPaginationResult {
+  desks: [Desk]
+  total: Int
+  skip: Int
+  limit: Int
+}
+```
+
+
+
+
+### Fields
+
+#### [<code style={{ fontWeight: 'normal' }}>DeskPaginationResult.<b>desks</b></code>](#)<Bullet />[<code style={{ fontWeight: 'normal' }}><b>[Desk]</b></code>](/main-backend-service/graphql/🧠🔍introspection/types/objects/desk.mdx) <Badge class="badge badge--secondary " text="list"/> <Badge class="badge badge--secondary " text="object"/> 
+
+
+
+#### [<code style={{ fontWeight: 'normal' }}>DeskPaginationResult.<b>total</b></code>](#)<Bullet />[<code style={{ fontWeight: 'normal' }}><b>Int</b></code>](/main-backend-service/graphql/🧠🔍introspection/types/scalars/int.mdx) <Badge class="badge badge--secondary " text="scalar"/> 
+
+
+
+#### [<code style={{ fontWeight: 'normal' }}>DeskPaginationResult.<b>skip</b></code>](#)<Bullet />[<code style={{ fontWeight: 'normal' }}><b>Int</b></code>](/main-backend-service/graphql/🧠🔍introspection/types/scalars/int.mdx) <Badge class="badge badge--secondary " text="scalar"/> 
+
+
+
+#### [<code style={{ fontWeight: 'normal' }}>DeskPaginationResult.<b>limit</b></code>](#)<Bullet />[<code style={{ fontWeight: 'normal' }}><b>Int</b></code>](/main-backend-service/graphql/🧠🔍introspection/types/scalars/int.mdx) <Badge class="badge badge--secondary " text="scalar"/> 
+
+
+
+
+
+
+
+### Returned By
+
+[`getDesks`](/main-backend-service/graphql/🧠🔍introspection/operations/queries/get-desks.mdx)  <Badge class="badge badge--secondary badge--relation" text="query"/><Bullet />[`getUserDesks`](/main-backend-service/graphql/🧠🔍introspection/operations/queries/get-user-desks.mdx)  <Badge class="badge badge--secondary badge--relation" text="query"/><Bullet />[`searchDesk`](/main-backend-service/graphql/🧠🔍introspection/operations/queries/search-desk.mdx)  <Badge class="badge badge--secondary badge--relation" text="query"/><Bullet />[`userPrivateSearchDesk`](/main-backend-service/graphql/🧠🔍introspection/operations/queries/user-private-search-desk.mdx)  <Badge class="badge badge--secondary badge--relation" text="query"/>

@@ -1,0 +1,72 @@
+---
+sidebar_position: 1
+---
+
+# Tổng quan API Backend (Spring Boot)
+
+Ứng dụng sử dụng **Spring Boot** để xây dựng backend với kiến trúc **RESTful API**, mang lại tính rõ ràng, dễ bảo trì và dễ tích hợp với các hệ thống frontend hoặc dịch vụ bên ngoài.
+
+## 📐 Kiến trúc RESTful
+
+Các API tuân theo các nguyên tắc REST:
+
+- **Resource-based:** Mỗi endpoint đại diện cho một tài nguyên.
+- **Stateless:** Server không lưu trạng thái của client giữa các request.
+- **Định nghĩa hành vi qua HTTP verbs:**
+  - `GET`: Lấy dữ liệu
+  - `POST`: Tạo mới dữ liệu
+  - `PUT/PATCH`: Cập nhật dữ liệu
+  - `DELETE`: Xoá dữ liệu
+
+## 🗂️ Cấu trúc phiên bản hóa API
+
+Để hỗ trợ nâng cấp hệ thống mà không ảnh hưởng đến client cũ, tất cả các endpoint đều được version hóa với tiền tố như sau:
+
+```
+/api/{{API_VERSION}}/resource
+```
+
+Ví dụ:
+
+```bash
+GET /api/v1/users
+POST /api/v1/users
+GET /api/v1/products/{id}
+```
+
+Trong đó `v1` là phiên bản đầu tiên của API.
+
+## 📛 Quy tắc đặt tên Endpoint
+
+- Sử dụng danh từ số nhiều: `/users`, `/orders`, `/products`
+- Theo đúng chuẩn REST:
+
+## 📦 Định dạng phản hồi (Response Format)
+
+Tất cả các phản hồi đều ở định dạng `JSON`.
+
+Ví dụ phản hồi thành công:
+
+```json
+{
+  "timestamp": "2025-05-07T14:52:03.123",
+  "status": 200,
+  "metadata": {
+    // dữ liệu trả về, có thể là một object, list, hoặc null
+  },
+  "message": "Mô tả kết quả xử lý (ví dụ: Thành công)",
+  "path": "/api/v1/users/1"
+}
+```
+
+Phản hồi khi có lỗi:
+
+```json
+{
+  "timestamp": "2025-05-07T14:55:00.000",
+  "status": 404,
+  "metadata": null,
+  "message": "Người dùng không tồn tại",
+  "path": "/api/v1/users/9999"
+}
+```

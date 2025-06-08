@@ -1,0 +1,23 @@
+---
+title: Thiết kế những flashcard trong desk theo cấu trúc dữ liệu linked list
+sidebar_position: 4
+---
+
+## Ý tưởng thiết kế
+
+Trong ứng dụng lexilearn, một thực thể rất quan trong là các desk, các desk này sẽ chứa các flashcard của người dùng.
+Vậy cần một quy tắc truy vấn các flashcard trong desk, hơn là các truy vấn mặc địng của database cung cấp, thêm vào đó là yêu cầu cần
+lưu trữ các flashcard theo một thứ tự và kèm theo đó là thay đổi thứ tự ấy khi cần thiết.
+
+Vậy yêu cầu đặt ra là thiết kế một câu trúc dữ liệu có thể ánh xạ được các record flashcard riêng lẻ thành một chuỗi các flashcard với
+thứ tự có thể chỉnh sửa và lưu trữ.
+
+Ngay lập tức, team dev đã nghĩ đến cấu trúc dữ liệu linked list.
+
+<img src={require('@site/static/img/Singlelinkedlist.png').default} />
+
+Vậy để hỗ trợ việc cấu trúc dữ liệu linked list một số
+
+import FlashcardLinkedlistClassDiagram from '@site/src/components/docs/flashcard-linked-list.tsx';
+
+<FlashcardLinkedlistClassDiagram />; ## Bước 1: Cấu hình MySQL để bật binlog
